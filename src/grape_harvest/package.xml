@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>grape_harvest</name>
+  <version>0.1.0</version>
+  <description>Dobot CR5 grape-cluster harvesting demo in Gazebo</description>
+  <maintainer email="shenxin@example.com">shenxin</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>xacro</exec_depend>
+  <exec_depend>gazebo_ros</exec_depend>
+  <exec_depend>gazebo_ros_control</exec_depend>
+  <exec_depend>controller_manager</exec_depend>
+  <exec_depend>joint_state_controller</exec_depend>
+  <exec_depend>joint_trajectory_controller</exec_depend>
+  <exec_depend>position_controllers</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>moveit_ros_move_group</exec_depend>
+  <exec_depend>moveit_planners_ompl</exec_depend>
+  <exec_depend>moveit_ros_visualization</exec_depend>
+  <exec_depend>moveit_commander</exec_depend>
+  <exec_depend>dobot_description</exec_depend>
+  <exec_depend>gazebo_ros_link_attacher</exec_depend>
+</package>

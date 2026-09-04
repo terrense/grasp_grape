@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<!-- Gazebo half of the demo: vineyard block + the wheeled harvesting platform. -->
+<launch>
+
+  <arg name="gui"    default="true"/>
+  <arg name="paused" default="false"/>
+
+  <!-- Spawn pose. Aisle 0 is at x = -0.22 (see make_models.aisle_x); the robot
+       starts short of the block at y = -5.6 facing +y, i.e. down the aisle. -->
+  <arg name="x"   default="-0.22"/>
+  <arg name="y"   default="-5.60"/>
+  <arg name="z"   default="0.06"/>
+  <arg name="yaw" default="1.5708"/>
+
+  <env name="GAZEBO_MODEL_PATH"
+       value="$(find grape_harvest)/models:$(optenv GAZEBO_MODEL_PATH)"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name"   value="$(find grape_harvest)/worlds/vineyard.world"/>
+    <arg name="paused"       value="$(arg paused)"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui"          value="$(arg gui)"/>
+    <arg name="headless"     value="false"/>
+    <arg name="debug"        value="false"/>
+    <arg name="verbose"      value="true"/>
+  </include>
+
+  <param name="robot_description"
+         command="$(find xacro)/xacro $(find grape_harvest)/urdf/cr5_grape.xacro"/>
+
+  <!-- Spawned with the arm already near the stow pose so it does not flail
+       through the trellis while the controllers come up. -->
+  <node name="spawn_cr5" pkg="gazebo_ros" type="spawn_model" output="screen"
+        args="-urdf -param robot_description -model cr5_robot
+              -x $(arg x) -y $(arg y) -z $(arg z) -Y $(arg yaw)
+              -J joint1 0 -J joint2 -1.3 -J joint3 2.4
+              -J joint4 -2.67 -J joint5 -1.5708 -J joint6 0
+              -unpause"/>
+
+  <rosparam file="$(find grape_harvest)/config/gazebo_controllers.yaml" command="load"/>
+
+  <node name="controller_spawner" pkg="controller_manager" type="spawner"
+        respawn="false" output="screen"
+        args="joint_state_controller arm_controller gripper_controller"/>
+
+  <node name="robot_state_publisher" pkg="robot_state_publisher"
+        type="robot_state_publisher" output="screen"/>
+
+  <!-- world -> odom correction. Stands in for VINS-Mono; see world_tf.py. -->
+  <node name="world_tf" pkg="grape_harvest" type="world_tf.py" output="screen"/>
+
+</launch>

@@ -1,0 +1,55 @@
+joint_state_controller:
+  type: joint_state_controller/JointStateController
+  publish_rate: 100
+
+arm_controller:
+  type: position_controllers/JointTrajectoryController
+  joints: [joint1, joint2, joint3, joint4, joint5, joint6]
+  constraints:
+    goal_time: 2.0
+    # 0 disables the check. gazebo_ros_control drives these joints with
+    # Joint::SetPosition (no PID gains are given), so the velocity Gazebo
+    # reports never settles cleanly to zero and this tolerance -- which
+    # joint_trajectory_controller folds into the *goal* tolerance as its
+    # velocity component -- aborts every trajectory with a misleading
+    # "goal error" message quoting the (tiny) position error instead.
+    stopped_velocity_tolerance: 0.0
+    # trajectory (path) tolerance disabled. These joints are driven
+    # kinematically by Joint::SetPosition, and once gazebo_ros_link_attacher
+    # rigidly joins the cut cluster to the flange the joint states deviate
+    # from the commanded path (PATH_TOLERANCE_VIOLATED on joint4). Path
+    # tracking is not a meaningful signal for a kinematically driven joint;
+    # the goal tolerance below still guards the endpoint.
+    # goal tolerance widened from 0.05 to 0.12 rad: once the cut cluster is
+    # rigidly joined to the flange it biases the SetPosition-driven joints by
+    # ~0.07 rad (GOAL_TOLERANCE_VIOLATED on joint3). The fruit is held by the
+    # attacher joint, not by tracking accuracy, so this costs nothing here --
+    # but it does mean joint tracking is NOT a valid accuracy metric in this
+    # sim. See README "known limitations".
+    joint1: {trajectory: 0.0, goal: 0.12}
+    joint2: {trajectory: 0.0, goal: 0.12}
+    joint3: {trajectory: 0.0, goal: 0.12}
+    joint4: {trajectory: 0.0, goal: 0.12}
+    joint5: {trajectory: 0.0, goal: 0.12}
+    joint6: {trajectory: 0.0, goal: 0.12}
+  stop_trajectory_duration: 0.3
+  state_publish_rate: 50
+  action_monitor_rate: 20
+
+gripper_controller:
+  type: position_controllers/JointTrajectoryController
+  joints: [left_blade_joint, right_blade_joint]
+  constraints:
+    goal_time: 2.0
+    # 0 disables the check. gazebo_ros_control drives these joints with
+    # Joint::SetPosition (no PID gains are given), so the velocity Gazebo
+    # reports never settles cleanly to zero and this tolerance -- which
+    # joint_trajectory_controller folds into the *goal* tolerance as its
+    # velocity component -- aborts every trajectory with a misleading
+    # "goal error" message quoting the (tiny) position error instead.
+    stopped_velocity_tolerance: 0.0
+    left_blade_joint:  {trajectory: 0.05, goal: 0.01}
+    right_blade_joint: {trajectory: 0.05, goal: 0.01}
+  stop_trajectory_duration: 0.2
+  state_publish_rate: 50
+  action_monitor_rate: 20

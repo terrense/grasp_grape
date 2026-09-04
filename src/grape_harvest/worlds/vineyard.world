@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="vineyard">
+
+    <include><uri>model://sun</uri></include>
+
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry><plane><normal>0 0 1</normal><size>120 120</size></plane></geometry>
+          <surface><friction><ode><mu>1.1</mu><mu2>1.1</mu2></ode></friction></surface>
+        </collision>
+        <visual name="visual">
+          <geometry><plane><normal>0 0 1</normal><size>120 120</size></plane></geometry>
+          <material>
+            <ambient>0.22 0.18 0.13 1</ambient>
+            <diffuse>0.42 0.34 0.24 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <include><uri>model://trellis</uri><pose>0 0 0 0 0 0</pose></include>
+    <include><uri>model://dirt_track</uri><pose>0 0 0 0 0 0</pose></include>
+
+    <!-- Creates/removes fixed joints between links at runtime. Per cluster the
+         demo uses it three times: hang it on the wire, clamp it in the cutter,
+         and release it over the crate. -->
+    <plugin name="ros_link_attacher_plugin" filename="libgazebo_ros_link_attacher.so"/>
+
+    <!-- Fixed observation camera, published on /harvest_cam/image_raw. Used to
+         record the run: a clean render at a steady frame rate, independent of
+         whatever the GUI camera happens to be doing. -->
+    <model name="harvest_cam">
+      <static>true</static>
+      <pose>-3.200 -5.000 2.600 0.000 0.331 0.785</pose>
+      <link name="link">
+        <sensor name="cam" type="camera">
+          <camera>
+            <horizontal_fov>1.15</horizontal_fov>
+            <image><width>1280</width><height>720</height><format>R8G8B8</format></image>
+            <clip><near>0.05</near><far>120</far></clip>
+          </camera>
+          <always_on>1</always_on>
+          <update_rate>30</update_rate>
+          <visualize>false</visualize>
+          <plugin name="harvest_cam_plugin" filename="libgazebo_ros_camera.so">
+            <cameraName>harvest_cam</cameraName>
+            <imageTopicName>image_raw</imageTopicName>
+            <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+            <frameName>harvest_cam_link</frameName>
+            <updateRate>30.0</updateRate>
+          </plugin>
+        </sensor>
+      </link>
+    </model>
+
+    <physics type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_update_rate>1000</real_time_update_rate>
+      <ode>
+        <solver><type>quick</type><iters>60</iters><sor>1.3</sor></solver>
+        <constraints>
+          <cfm>0.0</cfm><erp>0.2</erp>
+          <contact_max_correcting_vel>100</contact_max_correcting_vel>
+          <contact_surface_layer>0.001</contact_surface_layer>
+        </constraints>
+      </ode>
+    </physics>
+
+    <scene>
+      <ambient>0.55 0.55 0.55 1</ambient>
+      <background>0.62 0.74 0.88 1</background>
+      <shadows>true</shadows>
+    </scene>
+
+    <gui>
+      <camera name="user_camera">
+        <pose>-3.200 -5.000 2.600 0.000 0.331 0.785</pose>
+      </camera>
+    </gui>
+
+  </world>
+</sdf>

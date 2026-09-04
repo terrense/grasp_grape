@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<!-- Full demo: vineyard + CR5 + MoveIt + the harvest cycle. -->
+<launch>
+
+  <arg name="gui"        default="true"/>   <!-- gazebo client -->
+  <arg name="rviz"       default="false"/>  <!-- moveit rviz plugin -->
+  <arg name="auto_start" default="false"/>   <!-- run the pick node -->
+  <arg name="verify"     default="true"/>   <!-- report anything the arm moved -->
+
+  <!-- Recording. Prefer gui:=false while recording: the video comes from the
+       scene camera, not the GUI, and a headless gzserver keeps the sensor at a
+       steady frame rate instead of dropping frames to feed the GUI render. -->
+  <arg name="record"     default="false"/>
+  <arg name="video"      default="$(env HOME)/cr5_grape_harvest.mp4"/>
+
+  <include file="$(find grape_harvest)/launch/vineyard_gazebo.launch">
+    <arg name="gui" value="$(arg gui)"/>
+  </include>
+
+  <include file="$(find grape_harvest)/launch/moveit.launch">
+    <arg name="rviz" value="$(arg rviz)"/>
+  </include>
+
+  <node if="$(arg record)" name="harvest_recorder" pkg="grape_harvest"
+        type="record_run.py" output="screen">
+    <param name="out" value="$(arg video)"/>
+    <param name="fps" value="0"/>   <!-- 0 = measure the camera's real rate -->
+  </node>
+
+  <node if="$(arg auto_start)" name="grape_harvester" pkg="grape_harvest"
+        type="pick_grape.py" output="screen" required="false"
+        args="$(eval '--verify' if arg('verify') else '')"
+        launch-prefix="bash -c 'sleep 18; $0 $@'"/>
+
+</launch>

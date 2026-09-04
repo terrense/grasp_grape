@@ -1,0 +1,146 @@
+<?xml version="1.0" ?>
+<robot name="cr5_robot">
+    <!-- The arm chain starts at the CR5 mounting flange on top of the column,
+         not at the chassis, and ends at the cutter TCP rather than the bare
+         Link6 flange. -->
+    <group name="cr5_arm">
+        <chain base_link="arm_base_link" tip_link="tcp_link"/>
+    </group>
+    <group name="gripper">
+        <joint name="left_blade_joint"/>
+        <joint name="right_blade_joint"/>
+    </group>
+    <end_effector name="cutter" parent_link="tcp_link" group="gripper"
+                  parent_group="cr5_arm"/>
+
+    <group_state name="home" group="cr5_arm">
+        <joint name="joint1" value="0"/>
+        <joint name="joint2" value="0"/>
+        <joint name="joint3" value="0"/>
+        <joint name="joint4" value="0"/>
+        <joint name="joint5" value="0"/>
+        <joint name="joint6" value="0"/>
+    </group_state>
+    <!-- elbow-up posture facing the vine, cutter roughly horizontal -->
+    <group_state name="scan" group="cr5_arm">
+        <joint name="joint1" value="0"/>
+        <joint name="joint2" value="-0.7"/>
+        <joint name="joint3" value="1.4"/>
+        <joint name="joint4" value="-0.7"/>
+        <joint name="joint5" value="-1.5708"/>
+        <joint name="joint6" value="0"/>
+    </group_state>
+    <!-- STOW: folded upright over the deck for driving between rows.
+         Values come from scripts/stow_check.py, which measures the actual
+         link envelope rather than guessing. -->
+    <group_state name="stow" group="cr5_arm">
+        <joint name="joint1" value="0"/>
+        <joint name="joint2" value="-1.20"/>
+        <joint name="joint3" value="2.40"/>
+        <joint name="joint4" value="-1.20"/>
+        <joint name="joint5" value="-1.5708"/>
+        <joint name="joint6" value="0"/>
+    </group_state>
+    <group_state name="open" group="gripper">
+        <joint name="left_blade_joint" value="0.042"/>
+        <joint name="right_blade_joint" value="0.042"/>
+    </group_state>
+    <group_state name="closed" group="gripper">
+        <joint name="left_blade_joint" value="0.0"/>
+        <joint name="right_blade_joint" value="0.0"/>
+    </group_state>
+
+    <!-- The robot drives, so the base is no longer pinned to the world. A
+         floating joint (not planar) because the dirt track pitches and rolls
+         the chassis, and MoveIt has to see that to plan against a fixed vine. -->
+    <virtual_joint name="world_joint" type="floating"
+                   parent_frame="world" child_link="base_footprint"/>
+
+    <disable_collisions link1="base_link" link2="skid_plate" reason="Rigidly mounted"/>
+    <disable_collisions link1="base_link" link2="crate_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="base_link" link2="camera_mast" reason="Rigidly mounted"/>
+    <disable_collisions link1="base_link" link2="camera_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="base_link" link2="arm_column" reason="Rigidly mounted"/>
+    <disable_collisions link1="base_link" link2="arm_base_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="base_link" link2="wheel_fl_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="base_link" link2="wheel_fr_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="base_link" link2="wheel_rl_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="base_link" link2="wheel_rr_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="skid_plate" link2="crate_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="skid_plate" link2="camera_mast" reason="Rigidly mounted"/>
+    <disable_collisions link1="skid_plate" link2="camera_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="skid_plate" link2="arm_column" reason="Rigidly mounted"/>
+    <disable_collisions link1="skid_plate" link2="arm_base_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="skid_plate" link2="wheel_fl_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="skid_plate" link2="wheel_fr_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="skid_plate" link2="wheel_rl_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="skid_plate" link2="wheel_rr_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="crate_link" link2="camera_mast" reason="Rigidly mounted"/>
+    <disable_collisions link1="crate_link" link2="camera_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="crate_link" link2="arm_column" reason="Rigidly mounted"/>
+    <disable_collisions link1="crate_link" link2="arm_base_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="crate_link" link2="wheel_fl_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="crate_link" link2="wheel_fr_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="crate_link" link2="wheel_rl_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="crate_link" link2="wheel_rr_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="camera_mast" link2="camera_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="camera_mast" link2="arm_column" reason="Rigidly mounted"/>
+    <disable_collisions link1="camera_mast" link2="arm_base_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="camera_mast" link2="wheel_fl_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="camera_mast" link2="wheel_fr_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="camera_mast" link2="wheel_rl_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="camera_mast" link2="wheel_rr_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="camera_link" link2="arm_column" reason="Rigidly mounted"/>
+    <disable_collisions link1="camera_link" link2="arm_base_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="camera_link" link2="wheel_fl_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="camera_link" link2="wheel_fr_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="camera_link" link2="wheel_rl_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="camera_link" link2="wheel_rr_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="arm_column" link2="arm_base_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="arm_column" link2="wheel_fl_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="arm_column" link2="wheel_fr_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="arm_column" link2="wheel_rl_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="arm_column" link2="wheel_rr_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="arm_base_link" link2="wheel_fl_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="arm_base_link" link2="wheel_fr_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="arm_base_link" link2="wheel_rl_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="arm_base_link" link2="wheel_rr_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="wheel_fl_link" link2="wheel_fr_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="wheel_fl_link" link2="wheel_rl_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="wheel_fl_link" link2="wheel_rr_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="wheel_fr_link" link2="wheel_rl_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="wheel_fr_link" link2="wheel_rr_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="wheel_rl_link" link2="wheel_rr_link" reason="Rigidly mounted"/>
+    <disable_collisions link1="Link1" link2="base_link" reason="Never"/>
+    <disable_collisions link1="Link1" link2="skid_plate" reason="Never"/>
+    <disable_collisions link1="Link1" link2="crate_link" reason="Never"/>
+    <disable_collisions link1="Link1" link2="camera_mast" reason="Never"/>
+    <disable_collisions link1="Link1" link2="camera_link" reason="Never"/>
+    <disable_collisions link1="Link1" link2="arm_column" reason="Never"/>
+    <disable_collisions link1="Link1" link2="arm_base_link" reason="Never"/>
+    <disable_collisions link1="Link1" link2="wheel_fl_link" reason="Never"/>
+    <disable_collisions link1="Link1" link2="wheel_fr_link" reason="Never"/>
+    <disable_collisions link1="Link1" link2="wheel_rl_link" reason="Never"/>
+    <disable_collisions link1="Link1" link2="wheel_rr_link" reason="Never"/>
+    <disable_collisions link1="Link2" link2="arm_column" reason="Never"/>
+    <disable_collisions link1="Link2" link2="arm_base_link" reason="Never"/>
+    <disable_collisions link1="Link2" link2="base_link" reason="Never"/>
+    <disable_collisions link1="Link2" link2="camera_mast" reason="Never"/>
+    <disable_collisions link1="Link1" link2="Link2" reason="Adjacent"/>
+    <disable_collisions link1="Link1" link2="Link4" reason="Never"/>
+    <disable_collisions link1="Link2" link2="Link3" reason="Adjacent"/>
+    <disable_collisions link1="Link3" link2="Link4" reason="Adjacent"/>
+    <disable_collisions link1="Link4" link2="Link5" reason="Adjacent"/>
+    <disable_collisions link1="Link4" link2="Link6" reason="Never"/>
+    <disable_collisions link1="Link4" link2="ee_base" reason="Never"/>
+    <disable_collisions link1="Link5" link2="Link6" reason="Adjacent"/>
+    <disable_collisions link1="Link5" link2="ee_base" reason="Never"/>
+    <disable_collisions link1="Link5" link2="left_blade" reason="Never"/>
+    <disable_collisions link1="Link5" link2="right_blade" reason="Never"/>
+    <disable_collisions link1="Link6" link2="ee_base" reason="Adjacent"/>
+    <disable_collisions link1="Link6" link2="left_blade" reason="Never"/>
+    <disable_collisions link1="Link6" link2="right_blade" reason="Never"/>
+    <disable_collisions link1="ee_base" link2="left_blade" reason="Adjacent"/>
+    <disable_collisions link1="ee_base" link2="right_blade" reason="Adjacent"/>
+    <disable_collisions link1="left_blade" link2="right_blade" reason="Never"/>
+</robot>

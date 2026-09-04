@@ -1,0 +1,642 @@
+<?xml version="1.0"?>
+<!-- Vineyard harvesting robot: skid-steer field platform + Dobot CR5 + a
+     shear-type cutter, plus the sensors a VINS-Mono style estimator needs.
+
+     Arm kinematics/inertials come from dobot_gazebo/urdf/cr5_robot.xacro
+     (Dobot-Arm/TCP-IP-ROS-6AXis). Differences from the vendor file:
+       * <kinematic>true</kinematic> removed  -> links are real dynamic bodies
+       * libgazebo_ros_joint_pose_trajectory replaced by gazebo_ros_control
+       * the fixed `world` joint is gone: the robot is a free body now
+       * the arm sits on a wheeled platform instead of a fixed pedestal
+       * two-finger cutter on the Link6 flange
+
+     Frames:
+       base_footprint  ground contact point, what odometry reports
+       base_link       chassis centre
+       arm_base_link   CR5 base flange, 0.75 m above the ground
+     The arm base is deliberately kept at 0.75 m, the same height the fixed
+     pedestal put it at, so the reach geometry against a 1.22 m fruiting wire
+     is unchanged. -->
+<robot name="cr5_robot" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:property name="mesh" value="package://dobot_description/meshes/cr5"/>
+
+  <!-- ===================== platform geometry ===================== -->
+  <xacro:property name="wheel_r"    value="0.160"/>   <!-- 320 mm lug tyre -->
+  <xacro:property name="wheel_w"    value="0.120"/>
+  <xacro:property name="chassis_l"  value="1.500"/>
+  <xacro:property name="chassis_w"  value="0.560"/>
+  <xacro:property name="chassis_h"  value="0.220"/>
+  <xacro:property name="chassis_z"  value="0.360"/>   <!-- centre above ground -->
+  <xacro:property name="wheel_dx"   value="0.480"/>   <!-- 0.96 m wheelbase -->
+  <xacro:property name="wheel_dy"   value="0.320"/>   <!-- 0.64 m track -->
+  <xacro:property name="deck_z"     value="0.470"/>   <!-- chassis top -->
+  <xacro:property name="arm_base_z" value="0.750"/>
+
+  <!-- crate carried on the rear deck; keep in step with CRATE_* in make_models.py -->
+  <xacro:property name="crate_x"    value="-0.520"/>
+  <xacro:property name="crate_in"   value="0.440"/>
+  <xacro:property name="crate_h"    value="0.220"/>
+  <xacro:property name="crate_t"    value="0.014"/>
+
+  <material name="dobot_white"><color rgba="0.93 0.93 0.93 1"/></material>
+  <material name="dobot_dark"> <color rgba="0.15 0.15 0.17 1"/></material>
+  <material name="steel">      <color rgba="0.55 0.57 0.60 1"/></material>
+  <material name="rubber">     <color rgba="0.09 0.09 0.10 1"/></material>
+  <material name="chassis_y">  <color rgba="0.72 0.55 0.10 1"/></material>
+  <material name="crate_wood"> <color rgba="0.62 0.44 0.20 1"/></material>
+
+  <!-- ===================== chassis ===================== -->
+  <link name="base_footprint"/>
+
+  <link name="base_link">
+    <inertial>
+      <mass value="70.0"/>
+      <!-- box inertia for 1.50 x 0.56 x 0.22 -->
+      <inertia ixx="2.11" ixy="0" ixz="0" iyy="13.40" iyz="0" izz="14.95"/>
+    </inertial>
+    <visual>
+      <geometry><box size="${chassis_l} ${chassis_w} ${chassis_h}"/></geometry>
+      <material name="chassis_y"/>
+    </visual>
+    <collision>
+      <geometry><box size="${chassis_l} ${chassis_w} ${chassis_h}"/></geometry>
+    </collision>
+  </link>
+  <joint name="base_joint" type="fixed">
+    <origin xyz="0 0 ${chassis_z}"/>
+    <parent link="base_footprint"/><child link="base_link"/>
+  </joint>
+
+  <!-- skid plate: the underside guard a field platform needs, and it is what
+       sets the 0.25 m ground clearance over clods -->
+  <link name="skid_plate">
+    <inertial><mass value="6.0"/>
+      <inertia ixx="0.2" ixy="0" ixz="0" iyy="1.0" iyz="0" izz="1.2"/>
+    </inertial>
+    <visual>
+      <geometry><box size="${chassis_l*0.92} ${chassis_w*0.9} 0.03"/></geometry>
+      <material name="dobot_dark"/>
+    </visual>
+    <collision>
+      <geometry><box size="${chassis_l*0.92} ${chassis_w*0.9} 0.03"/></geometry>
+    </collision>
+  </link>
+  <joint name="skid_joint" type="fixed">
+    <origin xyz="0 0 ${-chassis_h/2 - 0.015}"/>
+    <parent link="base_link"/><child link="skid_plate"/>
+  </joint>
+
+  <!-- ===================== wheels =====================
+       320 mm x 120 mm aggressive lug tyre, four-wheel skid steer. Chosen for
+       the brief's rough dirt track: the large diameter rolls over clods a
+       small caster would trip on, the width spreads load on soft soil, and
+       skid steer has no steering linkage to foul on ruts.
+       The lugs are visual only — lug-by-lug contact geometry makes the ODE
+       solver chatter, so collision stays a plain cylinder with tyre-like
+       friction. That means this model does NOT reproduce lug grip in mud. -->
+  <xacro:macro name="lug_wheel" params="name x y">
+    <link name="${name}_link">
+      <inertial>
+        <mass value="4.0"/>
+        <inertia ixx="0.0304" ixy="0" ixz="0" iyy="0.0512" iyz="0" izz="0.0304"/>
+      </inertial>
+      <visual>
+        <origin rpy="1.5708 0 0"/>
+        <geometry><cylinder radius="${wheel_r}" length="${wheel_w}"/></geometry>
+        <material name="rubber"/>
+      </visual>
+      <!-- hub -->
+      <visual>
+        <origin rpy="1.5708 0 0"/>
+        <geometry><cylinder radius="${wheel_r*0.45}" length="${wheel_w*1.02}"/></geometry>
+        <material name="steel"/>
+      </visual>
+      <!-- lugs -->
+      <xacro:lug_ring name="${name}" n="0"/>
+      <xacro:lug_ring name="${name}" n="1"/>
+      <xacro:lug_ring name="${name}" n="2"/>
+      <xacro:lug_ring name="${name}" n="3"/>
+      <xacro:lug_ring name="${name}" n="4"/>
+      <xacro:lug_ring name="${name}" n="5"/>
+      <xacro:lug_ring name="${name}" n="6"/>
+      <xacro:lug_ring name="${name}" n="7"/>
+      <xacro:lug_ring name="${name}" n="8"/>
+      <xacro:lug_ring name="${name}" n="9"/>
+      <xacro:lug_ring name="${name}" n="10"/>
+      <xacro:lug_ring name="${name}" n="11"/>
+      <collision>
+        <origin rpy="1.5708 0 0"/>
+        <geometry><cylinder radius="${wheel_r}" length="${wheel_w}"/></geometry>
+      </collision>
+    </link>
+    <joint name="${name}_joint" type="continuous">
+      <origin xyz="${x} ${y} ${wheel_r - chassis_z}"/>
+      <parent link="base_link"/><child link="${name}_link"/>
+      <axis xyz="0 1 0"/>
+      <limit effort="200" velocity="20"/>
+      <dynamics damping="0.2" friction="0.5"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro name="lug_ring" params="name n">
+    <visual>
+      <origin xyz="${wheel_r*0.94*cos(n*0.5236)} 0 ${wheel_r*0.94*sin(n*0.5236)}"
+              rpy="0 ${-n*0.5236} 0"/>
+      <geometry><box size="0.045 ${wheel_w*1.06} 0.035"/></geometry>
+      <material name="rubber"/>
+    </visual>
+  </xacro:macro>
+
+  <xacro:lug_wheel name="wheel_fl" x="${wheel_dx}"  y="${wheel_dy}"/>
+  <xacro:lug_wheel name="wheel_fr" x="${wheel_dx}"  y="${-wheel_dy}"/>
+  <xacro:lug_wheel name="wheel_rl" x="${-wheel_dx}" y="${wheel_dy}"/>
+  <xacro:lug_wheel name="wheel_rr" x="${-wheel_dx}" y="${-wheel_dy}"/>
+
+  <!-- ===================== harvest crate on the deck =====================
+       The crate rides on the robot: a crate left on the ground would only be
+       reachable at one stop, and this platform is meant to work a whole row. -->
+  <xacro:macro name="crate_slab" params="name x y z sx sy sz">
+    <visual>
+      <origin xyz="${x} ${y} ${z}"/>
+      <geometry><box size="${sx} ${sy} ${sz}"/></geometry>
+      <material name="crate_wood"/>
+    </visual>
+    <collision>
+      <origin xyz="${x} ${y} ${z}"/>
+      <geometry><box size="${sx} ${sy} ${sz}"/></geometry>
+    </collision>
+  </xacro:macro>
+
+  <link name="crate_link">
+    <inertial><mass value="4.0"/>
+      <inertia ixx="0.08" ixy="0" ixz="0" iyy="0.08" iyz="0" izz="0.12"/>
+    </inertial>
+    <xacro:crate_slab name="floor" x="0" y="0" z="${crate_t/2}"
+                      sx="${crate_in}" sy="${crate_in}" sz="${crate_t}"/>
+    <xacro:crate_slab name="wx1" x="${crate_in/2 - crate_t/2}" y="0" z="${crate_h/2}"
+                      sx="${crate_t}" sy="${crate_in}" sz="${crate_h}"/>
+    <xacro:crate_slab name="wx2" x="${-(crate_in/2 - crate_t/2)}" y="0" z="${crate_h/2}"
+                      sx="${crate_t}" sy="${crate_in}" sz="${crate_h}"/>
+    <xacro:crate_slab name="wy1" x="0" y="${crate_in/2 - crate_t/2}" z="${crate_h/2}"
+                      sx="${crate_in}" sy="${crate_t}" sz="${crate_h}"/>
+    <xacro:crate_slab name="wy2" x="0" y="${-(crate_in/2 - crate_t/2)}" z="${crate_h/2}"
+                      sx="${crate_in}" sy="${crate_t}" sz="${crate_h}"/>
+  </link>
+  <joint name="crate_joint" type="fixed">
+    <origin xyz="${crate_x} 0 ${deck_z - chassis_z}"/>
+    <parent link="base_link"/><child link="crate_link"/>
+  </joint>
+
+  <!-- ===================== sensors ===================== -->
+  <!-- RGB-D on a short front mast. VINS-Mono is visual-INERTIAL, so the IMU
+       below is not optional for the estimator the brief plans to bring in. -->
+  <link name="camera_mast">
+    <inertial><mass value="1.5"/>
+      <inertia ixx="0.02" ixy="0" ixz="0" iyy="0.02" iyz="0" izz="0.004"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0.24"/>
+      <geometry><cylinder radius="0.030" length="0.48"/></geometry>
+      <material name="dobot_dark"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.24"/>
+      <geometry><cylinder radius="0.030" length="0.48"/></geometry>
+    </collision>
+  </link>
+  <joint name="camera_mast_joint" type="fixed">
+    <origin xyz="0.70 0 ${deck_z - chassis_z}"/>
+    <parent link="base_link"/><child link="camera_mast"/>
+  </joint>
+
+  <link name="camera_link">
+    <inertial><mass value="0.20"/>
+      <inertia ixx="1e-4" ixy="0" ixz="0" iyy="1e-4" iyz="0" izz="1e-4"/>
+    </inertial>
+    <visual>
+      <geometry><box size="0.030 0.130 0.040"/></geometry>
+      <material name="dobot_dark"/>
+    </visual>
+    <collision>
+      <geometry><box size="0.030 0.130 0.040"/></geometry>
+    </collision>
+  </link>
+  <!-- pitched 15 deg down: the fruiting wire and the track ahead both stay in
+       frame, which is what a forward-looking VIO wants -->
+  <joint name="camera_joint" type="fixed">
+    <origin xyz="0.02 0 0.48" rpy="0 0.2618 0"/>
+    <parent link="camera_mast"/><child link="camera_link"/>
+  </joint>
+
+  <link name="camera_depth_optical_frame"/>
+  <joint name="camera_depth_optical_joint" type="fixed">
+    <origin rpy="-1.5708 0 -1.5708"/>
+    <parent link="camera_link"/><child link="camera_depth_optical_frame"/>
+  </joint>
+
+  <link name="imu_link">
+    <inertial><mass value="0.05"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+    </inertial>
+  </link>
+  <joint name="imu_joint" type="fixed">
+    <origin xyz="0 0 0.02"/>
+    <parent link="base_link"/><child link="imu_link"/>
+  </joint>
+
+  <!-- ===================== arm column ===================== -->
+  <link name="arm_column">
+    <inertial><mass value="8.0"/>
+      <inertia ixx="0.06" ixy="0" ixz="0" iyy="0.06" iyz="0" izz="0.03"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 ${(arm_base_z - deck_z)/2}"/>
+      <geometry><cylinder radius="0.090" length="${arm_base_z - deck_z}"/></geometry>
+      <material name="dobot_dark"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 ${(arm_base_z - deck_z)/2}"/>
+      <geometry><cylinder radius="0.090" length="${arm_base_z - deck_z}"/></geometry>
+    </collision>
+  </link>
+  <joint name="arm_column_joint" type="fixed">
+    <origin xyz="0 0 ${deck_z - chassis_z}"/>
+    <parent link="base_link"/><child link="arm_column"/>
+  </joint>
+
+  <link name="arm_base_link">
+    <inertial>
+      <origin xyz="-8.0961E-06 0.0019103 0.028995" rpy="0 0 0"/>
+      <mass value="0.90882"/>
+      <inertia ixx="0.0014545" ixy="4.2968E-08" ixz="-1.8199E-07"
+               iyy="0.001345"  iyz="-6.243E-06" izz="0.002155"/>
+    </inertial>
+    <visual><geometry><mesh filename="${mesh}/base_link.dae"/></geometry><material name="dobot_dark"/></visual>
+    <collision><geometry><mesh filename="${mesh}/base_link.dae"/></geometry></collision>
+  </link>
+  <joint name="arm_mount_joint" type="fixed">
+    <origin xyz="0 0 ${arm_base_z - deck_z}"/>
+    <parent link="arm_column"/><child link="arm_base_link"/>
+  </joint>
+
+  <!-- ===================== CR5 arm ===================== -->
+  <link name="Link1">
+    <inertial>
+      <origin xyz="-8.7268E-07 -0.0032576 -0.0076748"/>
+      <mass value="1.6123"/>
+      <inertia ixx="0.0029122" ixy="5.7387E-09" ixz="1.9945E-08"
+               iyy="0.0028191" iyz="0.00044094" izz="0.0032836"/>
+    </inertial>
+    <visual><geometry><mesh filename="${mesh}/Link1.dae"/></geometry><material name="dobot_white"/></visual>
+    <collision><geometry><mesh filename="${mesh}/Link1.dae"/></geometry></collision>
+  </link>
+  <joint name="joint1" type="revolute">
+    <origin xyz="0 0 0.147" rpy="0 0 0"/>
+    <parent link="arm_base_link"/><child link="Link1"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-3.1416" upper="3.1416" effort="300" velocity="3.14"/>
+    <dynamics damping="2.0" friction="1.0"/>
+  </joint>
+
+  <link name="Link2">
+    <inertial>
+      <origin xyz="-0.21351 -1.3842E-06 0.14252"/>
+      <mass value="5.5186"/>
+      <inertia ixx="0.0085919" ixy="7.5552E-07" ixz="-7.8922E-07"
+               iyy="0.027553"  iyz="1.4629E-07" izz="0.028294"/>
+    </inertial>
+    <visual><geometry><mesh filename="${mesh}/Link2.dae"/></geometry><material name="dobot_white"/></visual>
+    <collision><geometry><mesh filename="${mesh}/Link2.dae"/></geometry></collision>
+  </link>
+  <joint name="joint2" type="revolute">
+    <origin xyz="0 0 0" rpy="1.5708 1.5708 0"/>
+    <parent link="Link1"/><child link="Link2"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-3.1416" upper="3.1416" effort="300" velocity="3.14"/>
+    <dynamics damping="2.0" friction="1.0"/>
+  </joint>
+
+  <link name="Link3">
+    <inertial>
+      <origin xyz="-0.15231 -1.4079E-07 0.022693"/>
+      <mass value="2.8536"/>
+      <inertia ixx="0.0032608" ixy="-3.2147E-10" ixz="0.00012363"
+               iyy="0.0092967" iyz="2.9478E-10"  izz="0.0095552"/>
+    </inertial>
+    <visual><geometry><mesh filename="${mesh}/Link3.dae"/></geometry><material name="dobot_white"/></visual>
+    <collision><geometry><mesh filename="${mesh}/Link3.dae"/></geometry></collision>
+  </link>
+  <joint name="joint3" type="revolute">
+    <origin xyz="-0.427 0 0"/>
+    <parent link="Link2"/><child link="Link3"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-2.79" upper="2.79" effort="300" velocity="3.14"/>
+    <dynamics damping="2.0" friction="1.0"/>
+  </joint>
+
+  <link name="Link4">
+    <inertial>
+      <origin xyz="-3.2386E-07 -0.002077 -0.0015548"/>
+      <mass value="0.67058"/>
+      <inertia ixx="0.00066939" ixy="4.1975E-10" ixz="-1.0734E-08"
+               iyy="0.00065424" iyz="0.00011081" izz="0.00065365"/>
+    </inertial>
+    <visual><geometry><mesh filename="${mesh}/Link4.dae"/></geometry><material name="dobot_white"/></visual>
+    <collision><geometry><mesh filename="${mesh}/Link4.dae"/></geometry></collision>
+  </link>
+  <joint name="joint4" type="revolute">
+    <origin xyz="-0.357 0 0.141" rpy="0 0 -1.5708"/>
+    <parent link="Link3"/><child link="Link4"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-3.1416" upper="3.1416" effort="300" velocity="3.14"/>
+    <dynamics damping="1.0" friction="0.5"/>
+  </joint>
+
+  <link name="Link5">
+    <inertial>
+      <origin xyz="-3.7738E-07 -0.0045777 -0.0012971"/>
+      <mass value="0.7269"/>
+      <inertia ixx="0.00073069" ixy="-5.7806E-09" ixz="6.7132E-09"
+               iyy="0.00071195" iyz="-0.00011926" izz="0.00071391"/>
+    </inertial>
+    <visual><geometry><mesh filename="${mesh}/Link5.dae"/></geometry><material name="dobot_white"/></visual>
+    <collision><geometry><mesh filename="${mesh}/Link5.dae"/></geometry></collision>
+  </link>
+  <joint name="joint5" type="revolute">
+    <origin xyz="0 -0.116 0" rpy="1.5708 0 0"/>
+    <parent link="Link4"/><child link="Link5"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-3.1416" upper="3.1416" effort="300" velocity="3.14"/>
+    <dynamics damping="1.0" friction="0.5"/>
+  </joint>
+
+  <link name="Link6">
+    <inertial>
+      <origin xyz="5.0777E-11 9.3774E-05 -0.019285"/>
+      <mass value="0.15789"/>
+      <inertia ixx="7.8045E-05" ixy="6.1582E-15" ixz="6.2471E-14"
+               iyy="7.9168E-05" iyz="-1.3822E-07" izz="0.00012951"/>
+    </inertial>
+    <visual><geometry><mesh filename="${mesh}/Link6.dae"/></geometry><material name="dobot_white"/></visual>
+    <collision><geometry><mesh filename="${mesh}/Link6.dae"/></geometry></collision>
+  </link>
+  <joint name="joint6" type="revolute">
+    <origin xyz="0 0.105 0" rpy="-1.5708 0 0"/>
+    <parent link="Link5"/><child link="Link6"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-3.1416" upper="3.1416" effort="300" velocity="3.14"/>
+    <dynamics damping="1.0" friction="0.5"/>
+  </joint>
+
+  <!-- ============ shear-type two-finger end effector ============
+       The two blades close on the peduncle (fruit stem), clamp it, and cut.
+       TCP sits at the pinch point, 95 mm ahead of the Link6 flange. -->
+  <link name="ee_base">
+    <inertial>
+      <origin xyz="0 0 0.028"/>
+      <mass value="0.45"/>
+      <inertia ixx="4.0E-04" ixy="0" ixz="0" iyy="4.0E-04" iyz="0" izz="4.0E-04"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0.028"/>
+      <geometry><box size="0.07 0.09 0.055"/></geometry>
+      <material name="dobot_dark"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.028"/>
+      <geometry><box size="0.07 0.09 0.055"/></geometry>
+    </collision>
+  </link>
+  <joint name="ee_joint" type="fixed">
+    <origin xyz="0 0 0.005"/>
+    <parent link="Link6"/><child link="ee_base"/>
+  </joint>
+
+  <link name="tcp_link">
+    <inertial><mass value="1e-4"/>
+      <inertia ixx="1e-8" ixy="0" ixz="0" iyy="1e-8" iyz="0" izz="1e-8"/>
+    </inertial>
+  </link>
+  <joint name="tcp_joint" type="fixed">
+    <origin xyz="0 0 0.090"/>
+    <parent link="ee_base"/><child link="tcp_link"/>
+  </joint>
+
+  <!-- q=0 -> 12 mm gap (clamped on a peduncle), q=0.042 -> 96 mm gap -->
+  <link name="left_blade">
+    <inertial><origin xyz="0 0.003 0.030"/><mass value="0.05"/>
+      <inertia ixx="2e-5" ixy="0" ixz="0" iyy="2e-5" iyz="0" izz="2e-5"/>
+    </inertial>
+    <visual><origin xyz="0 0.003 0.030"/>
+      <geometry><box size="0.05 0.006 0.062"/></geometry><material name="steel"/></visual>
+    <collision><origin xyz="0 0.003 0.030"/>
+      <geometry><box size="0.05 0.006 0.062"/></geometry></collision>
+  </link>
+  <joint name="left_blade_joint" type="prismatic">
+    <origin xyz="0 0.006 0.055"/>
+    <parent link="ee_base"/><child link="left_blade"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="0.0" upper="0.042" effort="100" velocity="0.5"/>
+    <dynamics damping="5.0" friction="1.0"/>
+  </joint>
+
+  <link name="right_blade">
+    <inertial><origin xyz="0 -0.003 0.030"/><mass value="0.05"/>
+      <inertia ixx="2e-5" ixy="0" ixz="0" iyy="2e-5" iyz="0" izz="2e-5"/>
+    </inertial>
+    <visual><origin xyz="0 -0.003 0.030"/>
+      <geometry><box size="0.05 0.006 0.062"/></geometry><material name="steel"/></visual>
+    <collision><origin xyz="0 -0.003 0.030"/>
+      <geometry><box size="0.05 0.006 0.062"/></geometry></collision>
+  </link>
+  <joint name="right_blade_joint" type="prismatic">
+    <origin xyz="0 -0.006 0.055"/>
+    <parent link="ee_base"/><child link="right_blade"/>
+    <axis xyz="0 -1 0"/>
+    <limit lower="0.0" upper="0.042" effort="100" velocity="0.5"/>
+    <dynamics damping="5.0" friction="1.0"/>
+  </joint>
+
+  <!-- ============ ros_control transmissions (arm only) ============
+       The wheels are deliberately NOT here: the skid-steer plugin owns those
+       joints, and having gazebo_ros_control claim them too would have two
+       controllers fighting over the same joint. -->
+  <xacro:macro name="pos_trans" params="jname">
+    <transmission name="${jname}_trans">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${jname}">
+        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="${jname}_motor">
+        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
+  </xacro:macro>
+
+  <xacro:pos_trans jname="joint1"/>
+  <xacro:pos_trans jname="joint2"/>
+  <xacro:pos_trans jname="joint3"/>
+  <xacro:pos_trans jname="joint4"/>
+  <xacro:pos_trans jname="joint5"/>
+  <xacro:pos_trans jname="joint6"/>
+  <xacro:pos_trans jname="left_blade_joint"/>
+  <xacro:pos_trans jname="right_blade_joint"/>
+
+  <!-- ===================== gazebo ===================== -->
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>/</robotNamespace>
+      <controlPeriod>0.001</controlPeriod>
+      <legacyModeNS>true</legacyModeNS>
+    </plugin>
+  </gazebo>
+
+  <!-- four-wheel skid steer; this is also the wheel odometry source -->
+  <gazebo>
+    <plugin name="skid_steer_drive" filename="libgazebo_ros_skid_steer_drive.so">
+      <updateRate>50.0</updateRate>
+      <robotNamespace>/</robotNamespace>
+      <leftFrontJoint>wheel_fl_joint</leftFrontJoint>
+      <rightFrontJoint>wheel_fr_joint</rightFrontJoint>
+      <leftRearJoint>wheel_rl_joint</leftRearJoint>
+      <rightRearJoint>wheel_rr_joint</rightRearJoint>
+      <wheelSeparation>${2*wheel_dy}</wheelSeparation>
+      <wheelDiameter>${2*wheel_r}</wheelDiameter>
+      <robotBaseFrame>base_footprint</robotBaseFrame>
+      <torque>220</torque>
+      <commandTopic>cmd_vel</commandTopic>
+      <odometryTopic>odom</odometryTopic>
+      <odometryFrame>odom</odometryFrame>
+      <broadcastTF>true</broadcastTF>
+      <covariance_x>0.0004</covariance_x>
+      <covariance_y>0.0004</covariance_y>
+      <covariance_yaw>0.0025</covariance_yaw>
+    </plugin>
+  </gazebo>
+
+  <!-- Ground truth pose. scripts/world_tf.py turns this into the world->odom
+       correction, i.e. it stands in for the localisation that VINS-Mono will
+       provide later. Wheel odometry alone drifts badly on this track, and the
+       arm has to hit a peduncle that is fixed in the world. -->
+  <gazebo>
+    <plugin name="ground_truth" filename="libgazebo_ros_p3d.so">
+      <alwaysOn>true</alwaysOn>
+      <updateRate>50.0</updateRate>
+      <bodyName>base_link</bodyName>
+      <topicName>ground_truth/state</topicName>
+      <frameName>world</frameName>
+      <gaussianNoise>0.0</gaussianNoise>
+      <xyzOffsets>0 0 0</xyzOffsets>
+      <rpyOffsets>0 0 0</rpyOffsets>
+    </plugin>
+  </gazebo>
+
+  <!-- wheel joint states: the skid-steer plugin does not publish them, and
+       without them robot_state_publisher cannot place the wheel links -->
+  <gazebo>
+    <plugin name="wheel_joint_states" filename="libgazebo_ros_joint_state_publisher.so">
+      <robotNamespace>/</robotNamespace>
+      <jointName>wheel_fl_joint, wheel_fr_joint, wheel_rl_joint, wheel_rr_joint</jointName>
+      <updateRate>50.0</updateRate>
+      <alwaysOn>true</alwaysOn>
+    </plugin>
+  </gazebo>
+
+  <!-- RGB-D -->
+  <gazebo reference="camera_link">
+    <sensor name="rgbd" type="depth">
+      <always_on>true</always_on>
+      <update_rate>30.0</update_rate>
+      <visualize>false</visualize>
+      <camera>
+        <horizontal_fov>1.2043</horizontal_fov>
+        <image><width>640</width><height>480</height><format>R8G8B8</format></image>
+        <clip><near>0.10</near><far>20.0</far></clip>
+      </camera>
+      <plugin name="rgbd_plugin" filename="libgazebo_ros_openni_kinect.so">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>30.0</updateRate>
+        <cameraName>camera</cameraName>
+        <imageTopicName>color/image_raw</imageTopicName>
+        <cameraInfoTopicName>color/camera_info</cameraInfoTopicName>
+        <depthImageTopicName>depth/image_raw</depthImageTopicName>
+        <depthImageCameraInfoTopicName>depth/camera_info</depthImageCameraInfoTopicName>
+        <pointCloudTopicName>depth/points</pointCloudTopicName>
+        <frameName>camera_depth_optical_frame</frameName>
+        <baseline>0.05</baseline>
+        <pointCloudCutoff>0.15</pointCloudCutoff>
+        <pointCloudCutoffMax>15.0</pointCloudCutoffMax>
+        <distortionK1>0</distortionK1><distortionK2>0</distortionK2>
+        <distortionK3>0</distortionK3>
+        <distortionT1>0</distortionT1><distortionT2>0</distortionT2>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- IMU: VINS-Mono is visual-inertial, it cannot run on the camera alone -->
+  <gazebo reference="imu_link">
+    <gravity>true</gravity>
+    <sensor name="imu_sensor" type="imu">
+      <always_on>true</always_on>
+      <update_rate>200.0</update_rate>
+      <visualize>false</visualize>
+      <imu>
+        <angular_velocity>
+          <x><noise type="gaussian"><mean>0</mean><stddev>2e-3</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0</mean><stddev>2e-3</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0</mean><stddev>2e-3</stddev></noise></z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x><noise type="gaussian"><mean>0</mean><stddev>1.7e-2</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0</mean><stddev>1.7e-2</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0</mean><stddev>1.7e-2</stddev></noise></z>
+        </linear_acceleration>
+      </imu>
+      <plugin name="imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+        <topicName>imu/data</topicName>
+        <bodyName>imu_link</bodyName>
+        <frameName>imu_link</frameName>
+        <updateRateHZ>200.0</updateRateHZ>
+        <gaussianNoise>0.0</gaussianNoise>
+        <initialOrientationAsReference>false</initialOrientationAsReference>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- materials + contact properties -->
+  <gazebo reference="base_link"><material>Gazebo/Yellow</material></gazebo>
+  <gazebo reference="skid_plate"><material>Gazebo/DarkGrey</material></gazebo>
+  <gazebo reference="arm_column"><material>Gazebo/DarkGrey</material></gazebo>
+  <gazebo reference="arm_base_link"><material>Gazebo/DarkGrey</material></gazebo>
+  <gazebo reference="crate_link"><material>Gazebo/Wood</material></gazebo>
+  <gazebo reference="camera_mast"><material>Gazebo/DarkGrey</material></gazebo>
+  <gazebo reference="camera_link"><material>Gazebo/DarkGrey</material></gazebo>
+  <gazebo reference="ee_base"><material>Gazebo/DarkGrey</material></gazebo>
+
+  <xacro:macro name="tyre_surface" params="name">
+    <gazebo reference="${name}_link">
+      <material>Gazebo/Black</material>
+      <mu1>1.5</mu1><mu2>1.2</mu2>
+      <kp>1e6</kp><kd>50</kd>
+      <minDepth>0.002</minDepth>
+      <maxVel>1.0</maxVel>
+    </gazebo>
+  </xacro:macro>
+  <xacro:tyre_surface name="wheel_fl"/>
+  <xacro:tyre_surface name="wheel_fr"/>
+  <xacro:tyre_surface name="wheel_rl"/>
+  <xacro:tyre_surface name="wheel_rr"/>
+
+  <!-- high friction on the blades so the clamped peduncle does not slip -->
+  <gazebo reference="left_blade">
+    <material>Gazebo/Grey</material><mu1>2.0</mu1><mu2>2.0</mu2>
+    <kp>1e6</kp><kd>100</kd>
+  </gazebo>
+  <gazebo reference="right_blade">
+    <material>Gazebo/Grey</material><mu1>2.0</mu1><mu2>2.0</mu2>
+    <kp>1e6</kp><kd>100</kd>
+  </gazebo>
+
+</robot>

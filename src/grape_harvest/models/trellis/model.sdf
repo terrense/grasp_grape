@@ -1,0 +1,1462 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <model name="trellis">
+    <link name="post_r0_0">
+      <pose>0.580 -4.000 0.925 0 0 0</pose>
+      <inertial><mass>20</mass>
+        <inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>0.2</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+        <material><ambient>0.24 0.17 0.10 1</ambient><diffuse>0.42 0.30 0.18 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_post_r0_0" type="fixed">
+      <parent>world</parent><child>post_r0_0</child>
+    </joint>
+    <link name="post_r0_1">
+      <pose>0.580 -2.000 0.925 0 0 0</pose>
+      <inertial><mass>20</mass>
+        <inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>0.2</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+        <material><ambient>0.24 0.17 0.10 1</ambient><diffuse>0.42 0.30 0.18 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_post_r0_1" type="fixed">
+      <parent>world</parent><child>post_r0_1</child>
+    </joint>
+    <link name="post_r0_2">
+      <pose>0.580 0.000 0.925 0 0 0</pose>
+      <inertial><mass>20</mass>
+        <inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>0.2</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+        <material><ambient>0.24 0.17 0.10 1</ambient><diffuse>0.42 0.30 0.18 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_post_r0_2" type="fixed">
+      <parent>world</parent><child>post_r0_2</child>
+    </joint>
+    <link name="post_r0_3">
+      <pose>0.580 2.000 0.925 0 0 0</pose>
+      <inertial><mass>20</mass>
+        <inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>0.2</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+        <material><ambient>0.24 0.17 0.10 1</ambient><diffuse>0.42 0.30 0.18 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_post_r0_3" type="fixed">
+      <parent>world</parent><child>post_r0_3</child>
+    </joint>
+    <link name="post_r0_4">
+      <pose>0.580 4.000 0.925 0 0 0</pose>
+      <inertial><mass>20</mass>
+        <inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>0.2</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+        <material><ambient>0.24 0.17 0.10 1</ambient><diffuse>0.42 0.30 0.18 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_post_r0_4" type="fixed">
+      <parent>world</parent><child>post_r0_4</child>
+    </joint>
+    <link name="wire_r0_fruit">
+      <pose>0.580 0 1.220 1.5708 0 0</pose>
+      <inertial><mass>1.0</mass>
+        <inertia><ixx>0.2</ixx><ixy>0</ixy><ixz>0</ixz><iyy>0.2</iyy><iyz>0</iyz><izz>0.001</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.004</radius><length>8.00</length></cylinder></geometry>
+        <material><ambient>0.30 0.30 0.32 1</ambient><diffuse>0.55 0.56 0.58 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.004</radius><length>8.00</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_wire_r0_fruit" type="fixed">
+      <parent>world</parent><child>wire_r0_fruit</child>
+    </joint>
+    <link name="wire_r0_canopy">
+      <pose>0.580 0 1.620 1.5708 0 0</pose>
+      <inertial><mass>1.0</mass>
+        <inertia><ixx>0.2</ixx><ixy>0</ixy><ixz>0</ixz><iyy>0.2</iyy><iyz>0</iyz><izz>0.001</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.004</radius><length>8.00</length></cylinder></geometry>
+        <material><ambient>0.30 0.30 0.32 1</ambient><diffuse>0.55 0.56 0.58 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.004</radius><length>8.00</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_wire_r0_canopy" type="fixed">
+      <parent>world</parent><child>wire_r0_canopy</child>
+    </joint>
+    <link name="post_r1_0">
+      <pose>2.180 -4.000 0.925 0 0 0</pose>
+      <inertial><mass>20</mass>
+        <inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>0.2</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+        <material><ambient>0.24 0.17 0.10 1</ambient><diffuse>0.42 0.30 0.18 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_post_r1_0" type="fixed">
+      <parent>world</parent><child>post_r1_0</child>
+    </joint>
+    <link name="post_r1_1">
+      <pose>2.180 -2.000 0.925 0 0 0</pose>
+      <inertial><mass>20</mass>
+        <inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>0.2</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+        <material><ambient>0.24 0.17 0.10 1</ambient><diffuse>0.42 0.30 0.18 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_post_r1_1" type="fixed">
+      <parent>world</parent><child>post_r1_1</child>
+    </joint>
+    <link name="post_r1_2">
+      <pose>2.180 0.000 0.925 0 0 0</pose>
+      <inertial><mass>20</mass>
+        <inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>0.2</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+        <material><ambient>0.24 0.17 0.10 1</ambient><diffuse>0.42 0.30 0.18 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_post_r1_2" type="fixed">
+      <parent>world</parent><child>post_r1_2</child>
+    </joint>
+    <link name="post_r1_3">
+      <pose>2.180 2.000 0.925 0 0 0</pose>
+      <inertial><mass>20</mass>
+        <inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>0.2</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+        <material><ambient>0.24 0.17 0.10 1</ambient><diffuse>0.42 0.30 0.18 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_post_r1_3" type="fixed">
+      <parent>world</parent><child>post_r1_3</child>
+    </joint>
+    <link name="post_r1_4">
+      <pose>2.180 4.000 0.925 0 0 0</pose>
+      <inertial><mass>20</mass>
+        <inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>0.2</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+        <material><ambient>0.24 0.17 0.10 1</ambient><diffuse>0.42 0.30 0.18 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_post_r1_4" type="fixed">
+      <parent>world</parent><child>post_r1_4</child>
+    </joint>
+    <link name="wire_r1_fruit">
+      <pose>2.180 0 1.220 1.5708 0 0</pose>
+      <inertial><mass>1.0</mass>
+        <inertia><ixx>0.2</ixx><ixy>0</ixy><ixz>0</ixz><iyy>0.2</iyy><iyz>0</iyz><izz>0.001</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.004</radius><length>8.00</length></cylinder></geometry>
+        <material><ambient>0.30 0.30 0.32 1</ambient><diffuse>0.55 0.56 0.58 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.004</radius><length>8.00</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_wire_r1_fruit" type="fixed">
+      <parent>world</parent><child>wire_r1_fruit</child>
+    </joint>
+    <link name="wire_r1_canopy">
+      <pose>2.180 0 1.620 1.5708 0 0</pose>
+      <inertial><mass>1.0</mass>
+        <inertia><ixx>0.2</ixx><ixy>0</ixy><ixz>0</ixz><iyy>0.2</iyy><iyz>0</iyz><izz>0.001</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.004</radius><length>8.00</length></cylinder></geometry>
+        <material><ambient>0.30 0.30 0.32 1</ambient><diffuse>0.55 0.56 0.58 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.004</radius><length>8.00</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_wire_r1_canopy" type="fixed">
+      <parent>world</parent><child>wire_r1_canopy</child>
+    </joint>
+    <link name="post_r2_0">
+      <pose>3.780 -4.000 0.925 0 0 0</pose>
+      <inertial><mass>20</mass>
+        <inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>0.2</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+        <material><ambient>0.24 0.17 0.10 1</ambient><diffuse>0.42 0.30 0.18 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_post_r2_0" type="fixed">
+      <parent>world</parent><child>post_r2_0</child>
+    </joint>
+    <link name="post_r2_1">
+      <pose>3.780 -2.000 0.925 0 0 0</pose>
+      <inertial><mass>20</mass>
+        <inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>0.2</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+        <material><ambient>0.24 0.17 0.10 1</ambient><diffuse>0.42 0.30 0.18 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_post_r2_1" type="fixed">
+      <parent>world</parent><child>post_r2_1</child>
+    </joint>
+    <link name="post_r2_2">
+      <pose>3.780 0.000 0.925 0 0 0</pose>
+      <inertial><mass>20</mass>
+        <inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>0.2</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+        <material><ambient>0.24 0.17 0.10 1</ambient><diffuse>0.42 0.30 0.18 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_post_r2_2" type="fixed">
+      <parent>world</parent><child>post_r2_2</child>
+    </joint>
+    <link name="post_r2_3">
+      <pose>3.780 2.000 0.925 0 0 0</pose>
+      <inertial><mass>20</mass>
+        <inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>0.2</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+        <material><ambient>0.24 0.17 0.10 1</ambient><diffuse>0.42 0.30 0.18 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_post_r2_3" type="fixed">
+      <parent>world</parent><child>post_r2_3</child>
+    </joint>
+    <link name="post_r2_4">
+      <pose>3.780 4.000 0.925 0 0 0</pose>
+      <inertial><mass>20</mass>
+        <inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>0.2</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+        <material><ambient>0.24 0.17 0.10 1</ambient><diffuse>0.42 0.30 0.18 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_post_r2_4" type="fixed">
+      <parent>world</parent><child>post_r2_4</child>
+    </joint>
+    <link name="wire_r2_fruit">
+      <pose>3.780 0 1.220 1.5708 0 0</pose>
+      <inertial><mass>1.0</mass>
+        <inertia><ixx>0.2</ixx><ixy>0</ixy><ixz>0</ixz><iyy>0.2</iyy><iyz>0</iyz><izz>0.001</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.004</radius><length>8.00</length></cylinder></geometry>
+        <material><ambient>0.30 0.30 0.32 1</ambient><diffuse>0.55 0.56 0.58 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.004</radius><length>8.00</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_wire_r2_fruit" type="fixed">
+      <parent>world</parent><child>wire_r2_fruit</child>
+    </joint>
+    <link name="wire_r2_canopy">
+      <pose>3.780 0 1.620 1.5708 0 0</pose>
+      <inertial><mass>1.0</mass>
+        <inertia><ixx>0.2</ixx><ixy>0</ixy><ixz>0</ixz><iyy>0.2</iyy><iyz>0</iyz><izz>0.001</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.004</radius><length>8.00</length></cylinder></geometry>
+        <material><ambient>0.30 0.30 0.32 1</ambient><diffuse>0.55 0.56 0.58 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.004</radius><length>8.00</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_wire_r2_canopy" type="fixed">
+      <parent>world</parent><child>wire_r2_canopy</child>
+    </joint>
+    <link name="post_r3_0">
+      <pose>5.380 -4.000 0.925 0 0 0</pose>
+      <inertial><mass>20</mass>
+        <inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>0.2</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+        <material><ambient>0.24 0.17 0.10 1</ambient><diffuse>0.42 0.30 0.18 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_post_r3_0" type="fixed">
+      <parent>world</parent><child>post_r3_0</child>
+    </joint>
+    <link name="post_r3_1">
+      <pose>5.380 -2.000 0.925 0 0 0</pose>
+      <inertial><mass>20</mass>
+        <inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>0.2</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+        <material><ambient>0.24 0.17 0.10 1</ambient><diffuse>0.42 0.30 0.18 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_post_r3_1" type="fixed">
+      <parent>world</parent><child>post_r3_1</child>
+    </joint>
+    <link name="post_r3_2">
+      <pose>5.380 0.000 0.925 0 0 0</pose>
+      <inertial><mass>20</mass>
+        <inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>0.2</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+        <material><ambient>0.24 0.17 0.10 1</ambient><diffuse>0.42 0.30 0.18 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_post_r3_2" type="fixed">
+      <parent>world</parent><child>post_r3_2</child>
+    </joint>
+    <link name="post_r3_3">
+      <pose>5.380 2.000 0.925 0 0 0</pose>
+      <inertial><mass>20</mass>
+        <inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>0.2</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+        <material><ambient>0.24 0.17 0.10 1</ambient><diffuse>0.42 0.30 0.18 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_post_r3_3" type="fixed">
+      <parent>world</parent><child>post_r3_3</child>
+    </joint>
+    <link name="post_r3_4">
+      <pose>5.380 4.000 0.925 0 0 0</pose>
+      <inertial><mass>20</mass>
+        <inertia><ixx>5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5</iyy><iyz>0</iyz><izz>0.2</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+        <material><ambient>0.24 0.17 0.10 1</ambient><diffuse>0.42 0.30 0.18 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.045</radius><length>1.850</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_post_r3_4" type="fixed">
+      <parent>world</parent><child>post_r3_4</child>
+    </joint>
+    <link name="wire_r3_fruit">
+      <pose>5.380 0 1.220 1.5708 0 0</pose>
+      <inertial><mass>1.0</mass>
+        <inertia><ixx>0.2</ixx><ixy>0</ixy><ixz>0</ixz><iyy>0.2</iyy><iyz>0</iyz><izz>0.001</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.004</radius><length>8.00</length></cylinder></geometry>
+        <material><ambient>0.30 0.30 0.32 1</ambient><diffuse>0.55 0.56 0.58 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.004</radius><length>8.00</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_wire_r3_fruit" type="fixed">
+      <parent>world</parent><child>wire_r3_fruit</child>
+    </joint>
+    <link name="wire_r3_canopy">
+      <pose>5.380 0 1.620 1.5708 0 0</pose>
+      <inertial><mass>1.0</mass>
+        <inertia><ixx>0.2</ixx><ixy>0</ixy><ixz>0</ixz><iyy>0.2</iyy><iyz>0</iyz><izz>0.001</izz></inertia>
+      </inertial>
+      <visual name="v">
+        <geometry><cylinder><radius>0.004</radius><length>8.00</length></cylinder></geometry>
+        <material><ambient>0.30 0.30 0.32 1</ambient><diffuse>0.55 0.56 0.58 1</diffuse></material>
+      </visual>
+      <collision name="c">
+        <geometry><cylinder><radius>0.004</radius><length>8.00</length></cylinder></geometry>
+      </collision>
+    </link>
+    <joint name="fix_wire_r3_canopy" type="fixed">
+      <parent>world</parent><child>wire_r3_canopy</child>
+    </joint>
+    <link name="canopy">
+      <pose>0 0 0 0 0 0</pose>
+      <inertial><mass>2.0</mass>
+        <inertia><ixx>1</ixx><ixy>0</ixy><ixz>0</ixz><iyy>1</iyy><iyz>0</iyz><izz>1</izz></inertia>
+      </inertial>
+      <visual name="leaf_r0_0">
+        <pose>0.554 -3.920 1.594 0 -0.10 0.10</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_1">
+        <pose>0.593 -3.760 1.441 0 -0.39 0.34</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_2">
+        <pose>0.556 -3.600 1.495 0 0.40 -0.03</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_3">
+        <pose>0.614 -3.440 1.572 0 0.11 -0.35</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_4">
+        <pose>0.593 -3.280 1.698 0 0.02 0.24</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_5">
+        <pose>0.597 -3.120 1.440 0 0.21 0.09</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_6">
+        <pose>0.560 -2.960 1.430 0 0.29 -0.03</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_7">
+        <pose>0.602 -2.800 1.701 0 0.17 0.42</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_8">
+        <pose>0.569 -2.640 1.676 0 -0.04 0.44</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_9">
+        <pose>0.618 -2.480 1.451 0 -0.29 -0.28</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_10">
+        <pose>0.627 -2.320 1.560 0 0.10 -0.20</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_11">
+        <pose>0.581 -2.160 1.543 0 -0.12 0.09</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_12">
+        <pose>0.588 -2.000 1.709 0 0.15 0.43</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_13">
+        <pose>0.616 -1.840 1.737 0 0.14 -0.34</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_14">
+        <pose>0.616 -1.680 1.729 0 0.32 0.07</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_15">
+        <pose>0.601 -1.520 1.488 0 0.27 0.07</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_16">
+        <pose>0.558 -1.360 1.440 0 0.28 0.49</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_17">
+        <pose>0.539 -1.200 1.676 0 -0.07 -0.35</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_18">
+        <pose>0.559 -1.040 1.666 0 0.30 -0.46</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_19">
+        <pose>0.591 -0.880 1.434 0 0.17 -0.17</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_20">
+        <pose>0.618 -0.720 1.734 0 0.00 0.50</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_21">
+        <pose>0.561 -0.560 1.445 0 0.08 -0.47</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_22">
+        <pose>0.550 -0.400 1.551 0 0.09 -0.34</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_23">
+        <pose>0.534 -0.240 1.698 0 -0.15 0.46</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_24">
+        <pose>0.620 -0.080 1.541 0 -0.03 0.02</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_25">
+        <pose>0.594 0.080 1.611 0 0.05 0.12</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_26">
+        <pose>0.624 0.240 1.582 0 -0.06 0.22</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_27">
+        <pose>0.554 0.400 1.516 0 0.38 0.02</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_28">
+        <pose>0.585 0.560 1.424 0 -0.07 0.08</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_29">
+        <pose>0.532 0.720 1.617 0 0.11 -0.44</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_30">
+        <pose>0.593 0.880 1.569 0 0.14 -0.15</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_31">
+        <pose>0.601 1.040 1.656 0 -0.38 -0.44</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_32">
+        <pose>0.598 1.200 1.728 0 -0.20 -0.04</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_33">
+        <pose>0.589 1.360 1.522 0 -0.11 -0.19</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_34">
+        <pose>0.567 1.520 1.611 0 -0.16 -0.12</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_35">
+        <pose>0.607 1.680 1.429 0 0.06 0.24</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_36">
+        <pose>0.561 1.840 1.491 0 0.24 -0.26</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_37">
+        <pose>0.549 2.000 1.559 0 0.16 -0.40</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_38">
+        <pose>0.562 2.160 1.527 0 0.27 -0.06</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_39">
+        <pose>0.616 2.320 1.474 0 -0.13 0.15</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_40">
+        <pose>0.618 2.480 1.564 0 -0.22 -0.38</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_41">
+        <pose>0.583 2.640 1.481 0 0.25 0.34</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_42">
+        <pose>0.548 2.800 1.509 0 0.25 0.14</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_43">
+        <pose>0.611 2.960 1.530 0 -0.30 -0.21</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_44">
+        <pose>0.609 3.120 1.507 0 -0.12 -0.08</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_45">
+        <pose>0.572 3.280 1.551 0 0.34 -0.34</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_46">
+        <pose>0.530 3.440 1.722 0 0.30 0.49</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_47">
+        <pose>0.573 3.600 1.724 0 0.34 -0.28</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_48">
+        <pose>0.605 3.760 1.688 0 0.13 0.02</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r0_49">
+        <pose>0.559 3.920 1.529 0 -0.22 -0.43</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_0">
+        <pose>2.189 -3.920 1.512 0 0.25 -0.45</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_1">
+        <pose>2.220 -3.760 1.642 0 0.34 0.40</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_2">
+        <pose>2.220 -3.600 1.605 0 -0.39 0.25</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_3">
+        <pose>2.147 -3.440 1.516 0 0.13 0.02</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_4">
+        <pose>2.171 -3.280 1.720 0 0.09 -0.16</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_5">
+        <pose>2.155 -3.120 1.696 0 -0.02 0.28</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_6">
+        <pose>2.165 -2.960 1.483 0 0.03 0.32</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_7">
+        <pose>2.147 -2.800 1.673 0 0.34 0.31</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_8">
+        <pose>2.212 -2.640 1.422 0 0.10 0.36</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_9">
+        <pose>2.135 -2.480 1.507 0 -0.19 0.03</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_10">
+        <pose>2.172 -2.320 1.571 0 0.22 -0.50</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_11">
+        <pose>2.135 -2.160 1.461 0 -0.30 -0.43</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_12">
+        <pose>2.227 -2.000 1.693 0 -0.33 0.00</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_13">
+        <pose>2.162 -1.840 1.521 0 -0.12 0.15</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_14">
+        <pose>2.189 -1.680 1.535 0 -0.25 -0.17</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_15">
+        <pose>2.142 -1.520 1.598 0 0.17 -0.12</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_16">
+        <pose>2.138 -1.360 1.477 0 -0.10 0.10</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_17">
+        <pose>2.208 -1.200 1.542 0 0.24 0.12</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_18">
+        <pose>2.173 -1.040 1.539 0 -0.00 0.20</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_19">
+        <pose>2.172 -0.880 1.642 0 -0.03 -0.25</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_20">
+        <pose>2.184 -0.720 1.642 0 -0.34 -0.08</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_21">
+        <pose>2.173 -0.560 1.701 0 0.35 -0.13</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_22">
+        <pose>2.220 -0.400 1.673 0 -0.19 -0.04</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_23">
+        <pose>2.142 -0.240 1.680 0 0.13 0.39</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_24">
+        <pose>2.209 -0.080 1.634 0 0.19 0.06</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_25">
+        <pose>2.140 0.080 1.608 0 -0.40 -0.36</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_26">
+        <pose>2.207 0.240 1.434 0 -0.33 -0.40</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_27">
+        <pose>2.218 0.400 1.477 0 -0.38 0.34</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_28">
+        <pose>2.142 0.560 1.690 0 0.14 0.34</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_29">
+        <pose>2.225 0.720 1.605 0 0.24 -0.46</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_30">
+        <pose>2.207 0.880 1.584 0 0.17 -0.39</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_31">
+        <pose>2.205 1.040 1.719 0 -0.35 -0.18</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_32">
+        <pose>2.186 1.200 1.685 0 -0.21 -0.32</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_33">
+        <pose>2.155 1.360 1.617 0 0.20 -0.11</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_34">
+        <pose>2.167 1.520 1.547 0 -0.12 -0.08</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_35">
+        <pose>2.138 1.680 1.580 0 0.38 -0.09</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_36">
+        <pose>2.205 1.840 1.471 0 0.15 0.26</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_37">
+        <pose>2.197 2.000 1.585 0 -0.01 0.14</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_38">
+        <pose>2.220 2.160 1.468 0 -0.32 0.25</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_39">
+        <pose>2.222 2.320 1.586 0 -0.05 0.22</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_40">
+        <pose>2.149 2.480 1.506 0 -0.24 0.09</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_41">
+        <pose>2.161 2.640 1.494 0 0.15 0.45</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_42">
+        <pose>2.160 2.800 1.646 0 -0.07 0.35</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_43">
+        <pose>2.188 2.960 1.505 0 -0.23 -0.48</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_44">
+        <pose>2.178 3.120 1.542 0 -0.26 -0.14</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_45">
+        <pose>2.162 3.280 1.668 0 -0.29 0.49</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_46">
+        <pose>2.178 3.440 1.612 0 -0.03 0.33</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_47">
+        <pose>2.212 3.600 1.598 0 -0.01 0.22</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_48">
+        <pose>2.216 3.760 1.548 0 0.19 0.46</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r1_49">
+        <pose>2.177 3.920 1.493 0 -0.21 0.22</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_0">
+        <pose>3.798 -3.920 1.727 0 0.28 -0.26</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_1">
+        <pose>3.749 -3.760 1.503 0 -0.25 0.20</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_2">
+        <pose>3.816 -3.600 1.708 0 -0.20 0.37</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_3">
+        <pose>3.761 -3.440 1.555 0 0.18 -0.41</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_4">
+        <pose>3.739 -3.280 1.687 0 -0.17 -0.14</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_5">
+        <pose>3.788 -3.120 1.636 0 -0.39 -0.17</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_6">
+        <pose>3.774 -2.960 1.575 0 -0.23 0.09</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_7">
+        <pose>3.826 -2.800 1.545 0 0.04 -0.38</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_8">
+        <pose>3.757 -2.640 1.633 0 -0.31 0.39</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_9">
+        <pose>3.821 -2.480 1.451 0 0.35 -0.13</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_10">
+        <pose>3.807 -2.320 1.662 0 -0.16 0.18</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_11">
+        <pose>3.795 -2.160 1.678 0 -0.19 0.25</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_12">
+        <pose>3.826 -2.000 1.635 0 0.03 -0.39</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_13">
+        <pose>3.779 -1.840 1.533 0 0.17 0.18</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_14">
+        <pose>3.787 -1.680 1.478 0 0.12 0.13</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_15">
+        <pose>3.748 -1.520 1.705 0 0.12 -0.38</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_16">
+        <pose>3.823 -1.360 1.465 0 -0.13 0.22</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_17">
+        <pose>3.790 -1.200 1.598 0 0.12 -0.04</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_18">
+        <pose>3.761 -1.040 1.476 0 -0.35 0.22</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_19">
+        <pose>3.805 -0.880 1.594 0 0.19 -0.14</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_20">
+        <pose>3.757 -0.720 1.543 0 0.30 -0.46</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_21">
+        <pose>3.780 -0.560 1.499 0 0.22 -0.15</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_22">
+        <pose>3.763 -0.400 1.549 0 0.03 0.27</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_23">
+        <pose>3.765 -0.240 1.691 0 -0.31 -0.23</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_24">
+        <pose>3.740 -0.080 1.456 0 0.22 0.23</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_25">
+        <pose>3.748 0.080 1.481 0 -0.07 0.24</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_26">
+        <pose>3.812 0.240 1.660 0 0.07 -0.35</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_27">
+        <pose>3.770 0.400 1.482 0 0.02 0.07</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_28">
+        <pose>3.750 0.560 1.500 0 0.23 -0.47</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_29">
+        <pose>3.810 0.720 1.705 0 0.36 -0.12</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_30">
+        <pose>3.785 0.880 1.607 0 0.11 0.48</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_31">
+        <pose>3.799 1.040 1.516 0 0.29 -0.02</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_32">
+        <pose>3.790 1.200 1.653 0 -0.40 0.27</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_33">
+        <pose>3.796 1.360 1.577 0 0.02 -0.04</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_34">
+        <pose>3.749 1.520 1.589 0 -0.37 0.00</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_35">
+        <pose>3.795 1.680 1.562 0 0.05 0.46</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_36">
+        <pose>3.819 1.840 1.463 0 0.23 0.12</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_37">
+        <pose>3.735 2.000 1.535 0 -0.21 -0.42</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_38">
+        <pose>3.784 2.160 1.718 0 -0.14 0.37</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_39">
+        <pose>3.799 2.320 1.463 0 0.29 0.10</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_40">
+        <pose>3.823 2.480 1.649 0 0.19 -0.16</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_41">
+        <pose>3.811 2.640 1.718 0 0.29 -0.06</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_42">
+        <pose>3.806 2.800 1.575 0 -0.31 -0.46</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_43">
+        <pose>3.738 2.960 1.484 0 -0.27 -0.00</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_44">
+        <pose>3.800 3.120 1.592 0 -0.06 0.15</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_45">
+        <pose>3.760 3.280 1.569 0 0.21 -0.10</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_46">
+        <pose>3.748 3.440 1.708 0 0.18 -0.13</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_47">
+        <pose>3.767 3.600 1.589 0 0.08 -0.28</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_48">
+        <pose>3.730 3.760 1.487 0 0.23 -0.36</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r2_49">
+        <pose>3.776 3.920 1.482 0 -0.23 -0.33</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_0">
+        <pose>5.370 -3.920 1.474 0 -0.38 -0.39</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_1">
+        <pose>5.347 -3.760 1.577 0 -0.35 -0.48</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_2">
+        <pose>5.375 -3.600 1.550 0 0.16 -0.45</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_3">
+        <pose>5.370 -3.440 1.547 0 -0.38 0.47</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_4">
+        <pose>5.352 -3.280 1.450 0 -0.02 -0.34</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_5">
+        <pose>5.392 -3.120 1.531 0 -0.30 -0.45</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_6">
+        <pose>5.403 -2.960 1.508 0 0.23 -0.03</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_7">
+        <pose>5.423 -2.800 1.516 0 -0.20 -0.23</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_8">
+        <pose>5.411 -2.640 1.621 0 -0.12 -0.41</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_9">
+        <pose>5.398 -2.480 1.730 0 0.07 -0.50</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_10">
+        <pose>5.333 -2.320 1.449 0 -0.26 -0.46</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_11">
+        <pose>5.335 -2.160 1.629 0 0.32 -0.30</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_12">
+        <pose>5.427 -2.000 1.573 0 0.24 0.42</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_13">
+        <pose>5.424 -1.840 1.431 0 -0.16 0.11</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_14">
+        <pose>5.425 -1.680 1.448 0 -0.17 0.35</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_15">
+        <pose>5.341 -1.520 1.545 0 -0.13 0.18</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_16">
+        <pose>5.423 -1.360 1.476 0 0.19 0.23</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_17">
+        <pose>5.414 -1.200 1.597 0 0.34 -0.14</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_18">
+        <pose>5.371 -1.040 1.493 0 0.22 -0.02</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_19">
+        <pose>5.357 -0.880 1.474 0 0.18 0.11</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_20">
+        <pose>5.401 -0.720 1.544 0 -0.01 -0.35</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_21">
+        <pose>5.401 -0.560 1.427 0 -0.03 0.26</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_22">
+        <pose>5.398 -0.400 1.451 0 -0.21 0.34</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_23">
+        <pose>5.394 -0.240 1.701 0 0.30 -0.05</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_24">
+        <pose>5.420 -0.080 1.655 0 -0.13 -0.13</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_25">
+        <pose>5.337 0.080 1.548 0 0.36 -0.40</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_26">
+        <pose>5.387 0.240 1.455 0 -0.34 0.15</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_27">
+        <pose>5.354 0.400 1.436 0 -0.28 0.14</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_28">
+        <pose>5.389 0.560 1.424 0 -0.22 0.47</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_29">
+        <pose>5.352 0.720 1.600 0 -0.06 0.28</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_30">
+        <pose>5.390 0.880 1.672 0 0.03 -0.31</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_31">
+        <pose>5.348 1.040 1.445 0 0.26 -0.39</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_32">
+        <pose>5.332 1.200 1.729 0 -0.24 0.39</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_33">
+        <pose>5.339 1.360 1.569 0 -0.22 0.33</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_34">
+        <pose>5.392 1.520 1.625 0 0.21 0.37</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_35">
+        <pose>5.365 1.680 1.613 0 -0.04 -0.39</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_36">
+        <pose>5.414 1.840 1.610 0 0.25 -0.29</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_37">
+        <pose>5.384 2.000 1.569 0 0.18 -0.42</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_38">
+        <pose>5.365 2.160 1.575 0 -0.34 0.05</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_39">
+        <pose>5.404 2.320 1.555 0 0.12 0.11</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_40">
+        <pose>5.351 2.480 1.532 0 0.40 -0.16</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_41">
+        <pose>5.373 2.640 1.447 0 -0.23 -0.33</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_42">
+        <pose>5.423 2.800 1.652 0 0.30 0.49</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_43">
+        <pose>5.391 2.960 1.718 0 0.03 -0.08</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_44">
+        <pose>5.425 3.120 1.709 0 0.36 -0.02</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_45">
+        <pose>5.407 3.280 1.550 0 0.40 0.42</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_46">
+        <pose>5.359 3.440 1.719 0 -0.25 -0.40</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_47">
+        <pose>5.402 3.600 1.514 0 0.02 0.14</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_48">
+        <pose>5.334 3.760 1.658 0 -0.18 -0.07</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+      <visual name="leaf_r3_49">
+        <pose>5.364 3.920 1.657 0 0.20 -0.21</pose>
+        <geometry><box><size>0.02 0.20 0.22</size></box></geometry>
+        <material><ambient>0.08 0.20 0.05 1</ambient><diffuse>0.16 0.42 0.10 1</diffuse></material>
+      </visual>
+    </link>
+    <joint name="fix_canopy" type="fixed">
+      <parent>world</parent><child>canopy</child>
+    </joint>
+  </model>
+</sdf>

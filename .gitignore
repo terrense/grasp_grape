@@ -1,0 +1,15 @@
+# catkin 构建产物
+/build/
+/devel/
+/logs/
+/.catkin_tools/
+*.pyc
+__pycache__/
+
+# 第三方包按 README 单独 clone 到 src/，不 vendor 进本仓库
+/src/TCP-IP-ROS-6AXis/
+/src/gazebo_ros_link_attacher/
+
+# 运行时产生的日志和输出
+*.log
+/shots/
