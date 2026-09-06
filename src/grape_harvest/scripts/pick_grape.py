@@ -1,24 +1,36 @@
 #!/usr/bin/env python3
-"""Dobot CR5 grape-cluster harvesting demo.
+"""Dobot CR5 grape harvesting from the mobile vineyard platform.
 
-Harvests every cluster on the fruiting wire, one at a time. Per cluster:
+Per panel: drive the aisle until the panel is abreast of the arm, unstow, cut
+every cluster on that panel into the deck crate, stow, move on.
+
+Per cluster:
 
     approach standoff -> descend onto the peduncle -> close blades (clamp)
     -> cut (stem joint released, cluster handed to the cutter) -> retreat
-    -> carry to its slot in the crate -> open (release)
+    -> carry to its slot in the deck crate -> open (release)
 
-"Cutting" is modelled with gazebo_ros_link_attacher: a cluster hangs off
-trellis::wire_fruit by a runtime fixed joint; the cut attaches it to the robot
+"Cutting" is modelled with gazebo_ros_link_attacher: a cluster hangs off its
+row's fruiting wire by a runtime fixed joint; the cut attaches it to the robot
 flange and *then* removes the wire joint, so the fruit is never in free fall.
 
-Collision safety: every motion is planned by MoveIt against a planning scene
-that carries the posts, the canopy wire, the crate, the clusters still on the
-vine, and the clusters already lying in the crate. The only object deliberately
-removed is the one cluster being cut, and only for the final few centimetres of
-its own descent. `--verify` additionally watches the Gazebo poses of everything
-the arm is not supposed to touch and reports any that moved.
+What changed from the fixed-pedestal version
+--------------------------------------------
+The arm base and the crate both ride on the platform now, so neither sits at a
+constant place in the world. Vine-side poses are built in the world frame (the
+fruit does not move) but their azimuth is measured from wherever the arm column
+currently is; crate-side poses are built in `base_link` and pushed through TF
+into the planning frame. Cluster geometry is no longer three hand-written y
+coordinates -- it comes from make_models.bunch_layout(), which is also what
+generated the world, so the scene and the motion plan cannot drift apart.
 
-Run with --check-only to just report IK reachability of every key pose.
+Collision safety: every motion is planned by MoveIt against a planning scene
+carrying the posts, the canopy wires, the ground and every cluster still on the
+vine. The crate and the vehicle are robot links, so MoveIt already avoids them.
+The only object deliberately removed is the one cluster being cut, and only for
+the final few centimetres of its own descent. `--verify` additionally watches
+the Gazebo poses of everything the arm is not supposed to touch and reports any
+that moved.
 """
 import argparse
 import copy
@@ -28,6 +40,7 @@ import sys
 import time
 
 import rospy
+import tf2_ros
 import tf.transformations as tft
 from geometry_msgs.msg import Pose, PoseStamped, Quaternion
 
@@ -40,18 +53,16 @@ from gazebo_msgs.srv import SpawnModel
 from gazebo_ros_link_attacher.srv import Attach, AttachRequest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from make_models import (VINE_X, WIRE_Z, POST_Y, POST_H, PEDU_LEN, BODY_LEN,
-                         BUNCH_Y, CRATE_XY, CRATE_H, GRASP_Z,
-                         BUNCH_DROP_BELOW_TCP)
-
-PKG_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from make_models import (WIRE_Z, CANOPY_Z, POST_H, PANEL_W, PANELS_PER_ROW,
+                         N_ROWS, ROW_LEN, ROW_DX, CRATE_BASE_XYZ, CRATE_INNER,
+                         CRATE_SLOTS, row_x, aisle_x, bunch_layout,
+                         grape_bunch)
 
 ROBOT_MODEL = "cr5_robot"
 # ee_base/tcp_link are lumped into Link6 by the URDF->SDF fixed-joint merge,
 # so Link6 is the link that actually exists in Gazebo.
 ROBOT_EE_LINK = "Link6"
 TRELLIS_MODEL = "trellis"
-WIRE_LINK = "wire_fruit"
 BUNCH_LINK = "bunch_link"
 
 APPROACH = 0.15                    # standoff along the tool axis, metres
@@ -60,11 +71,25 @@ RETREAT = 0.18
 BLADE_OPEN = 0.042
 BLADE_CLOSED = 0.002               # slight squeeze on the 12 mm peduncle
 
-# Where each harvested cluster is set down inside the crate, as an x offset
-# from the crate centre. Keeps the clusters from piling onto each other.
-# Slots must be at least one cluster diameter (~0.14 m) apart or the
-# fruit piles up on itself in the crate.
-CRATE_SLOT_DX = [-0.14, 0.0, 0.14]
+CRATE_T = 0.014                    # crate floor thickness, matches the xacro
+CRATE_FLOOR_Z = CRATE_BASE_XYZ[2] + CRATE_T
+DROP_CLEARANCE = 0.05              # fruit hangs this far above the floor
+
+# Prefilter only: a cluster is attempted if its grasp point is within this
+# straight-line distance of the arm base. The CR5 reaches 900 mm to the flange
+# and the cutter TCP sits 95 mm beyond it, so ~0.95 m is the outer envelope --
+# but whether a given pose solves is an IK question, not a radius one. This
+# just avoids burning planning time on obvious non-starters; --check-only
+# reports what actually solves.
+#
+# The geometry is tight by construction: the aisle runs midway between rows
+# 1.6 m apart, so the column always stands 0.80 m out from the fruit
+# horizontally, and the fruiting wire is another 0.32-0.41 m above the arm
+# base. Best case is therefore ~0.87 m of the ~0.95 m envelope, and a cluster
+# much more than 0.2 m off the beam is already outside it -- which is why the
+# platform parks once per cluster rather than once per panel.
+REACH = 0.95
+REACH_MIN = 0.25
 
 # Cutter tilted down by this much. A purely horizontal approach puts the
 # forearm at the same height as the top of the cluster and every plan collides;
@@ -74,7 +99,7 @@ PITCH = math.radians(20.0)
 
 
 def tool_quat(azimuth, pitch=PITCH):
-    """Cutter pointing outward from the base and tilted down by `pitch`.
+    """Cutter pointing outward from the arm column and tilted down by `pitch`.
 
     Tool +Z is the approach axis (out of the Link6 flange) and the blades
     separate along tool +/-Y, so the blades close across a vertical peduncle.
@@ -110,10 +135,6 @@ def backed_off(x, y, z, azimuth, dist, lift=0.0):
                    azimuth)
 
 
-def bunch_name(i):
-    return "grape_%d" % i
-
-
 class GrapeHarvester(object):
     def __init__(self):
         moveit_commander.roscpp_initialize(sys.argv)
@@ -129,39 +150,104 @@ class GrapeHarvester(object):
         self.grip.set_max_velocity_scaling_factor(0.5)
         self.set_speed(0.35)
 
+        self.planning_frame = self.arm.get_planning_frame()
+
+        # The platform moves, so nothing on the robot has a fixed world pose.
+        # Everything crate-side is resolved through TF at the moment it is used.
+        self.tf_buf = tf2_ros.Buffer()
+        self.tf_listener = tf2_ros.TransformListener(self.tf_buf)
+
         rospy.wait_for_service("/compute_ik", timeout=60.0)
         self.ik = rospy.ServiceProxy("/compute_ik", GetPositionIK)
 
-        rospy.loginfo("planning frame: %s", self.arm.get_planning_frame())
+        self.slots_used = 0
+        self.in_scene = set()
+
+        rospy.loginfo("planning frame: %s", self.planning_frame)
         rospy.loginfo("end effector  : %s", self.arm.get_end_effector_link())
 
     def set_speed(self, f):
         self.arm.set_max_velocity_scaling_factor(f)
         self.arm.set_max_acceleration_scaling_factor(f)
 
-    # ------------------------------------------------------- key poses
-    def vine_poses(self, i):
-        """(pre_grasp, grasp, post_cut) for the cluster at BUNCH_Y[i].
+    # -------------------------------------------------------------- frames
+    def _mat(self, target, source, timeout=5.0):
+        """4x4 transform that maps a point in `source` into `target`."""
+        t = self.tf_buf.lookup_transform(target, source, rospy.Time(0),
+                                         rospy.Duration(timeout))
+        m = tft.quaternion_matrix([t.transform.rotation.x,
+                                   t.transform.rotation.y,
+                                   t.transform.rotation.z,
+                                   t.transform.rotation.w])
+        m[0, 3] = t.transform.translation.x
+        m[1, 3] = t.transform.translation.y
+        m[2, 3] = t.transform.translation.z
+        return m
 
-        The tool always advances radially outward from the base, so each
-        cluster gets its own azimuth rather than a fixed +x approach.
+    def base_to_world(self, x, y, z):
+        m = self._mat(self.planning_frame, "base_link")
+        v = m.dot([x, y, z, 1.0])
+        return v[0], v[1], v[2]
+
+    def world_to_base(self, x, y, z):
+        m = self._mat("base_link", self.planning_frame)
+        v = m.dot([x, y, z, 1.0])
+        return v[0], v[1], v[2]
+
+    def base_yaw(self):
+        m = self._mat(self.planning_frame, "base_link")
+        return math.atan2(m[1, 0], m[0, 0])
+
+    def arm_origin(self):
+        """World xyz of the arm column, which is what azimuths radiate from."""
+        m = self._mat(self.planning_frame, "arm_base_link")
+        return m[0, 3], m[1, 3], m[2, 3]
+
+    # ----------------------------------------------------------- key poses
+    def vine_poses(self, spec):
+        """(pre_grasp, grasp, post_cut) for one cluster.
+
+        The fruit is fixed in the world, but the azimuth the tool comes in on
+        is measured from wherever the arm column is standing right now.
         """
-        y = BUNCH_Y[i]
-        az = math.atan2(y, VINE_X)
-        grasp = pose_at(VINE_X, y, GRASP_Z, az)
-        pre = backed_off(VINE_X, y, GRASP_Z, az, APPROACH)
-        post = backed_off(VINE_X, y, GRASP_Z, az, RETREAT, lift=0.05)
+        ax, ay, _ = self.arm_origin()
+        x, y, z = spec["x"], spec["y"], spec["grasp_z"]
+        az = math.atan2(y - ay, x - ax)
+        grasp = pose_at(x, y, z, az)
+        pre = backed_off(x, y, z, az, APPROACH)
+        post = backed_off(x, y, z, az, RETREAT, lift=0.05)
         return pre, grasp, post
 
-    def crate_poses(self, slot):
-        """(over_crate, release) for one crate slot."""
-        x = CRATE_XY[0] + CRATE_SLOT_DX[slot % len(CRATE_SLOT_DX)]
-        y = CRATE_XY[1]
-        az = math.atan2(y, x)
-        drop_z = CRATE_H + BUNCH_DROP_BELOW_TCP + 0.06
-        # Same PITCH as the cut: the cluster is rigidly clamped at the moment
-        # of the cut, so holding the tool attitude constant keeps it upright.
-        return pose_at(x, y, drop_z + 0.12, az), pose_at(x, y, drop_z, az)
+    def crate_poses(self, slot, hang_below_tcp):
+        """(over_crate, release) for one crate slot, in the planning frame.
+
+        Built in base_link because the crate rides on the deck: the slot is at
+        a constant place on the robot, not in the vineyard.
+        """
+        dx, dy = CRATE_SLOTS[slot % len(CRATE_SLOTS)]
+        bx = CRATE_BASE_XYZ[0] + dx
+        by = CRATE_BASE_XYZ[1] + dy
+        bz = CRATE_FLOOR_Z + hang_below_tcp + DROP_CLEARANCE
+
+        # Azimuth in the base frame, then rotated into the world: the crate is
+        # behind the column, so the tool turns round to face it.
+        az = math.atan2(by, bx) + self.base_yaw()
+
+        rx, ry, rz = self.base_to_world(bx, by, bz)
+        ox, oy, oz = self.base_to_world(bx, by, bz + 0.12)
+        return pose_at(ox, oy, oz, az), pose_at(rx, ry, rz, az)
+
+    def reachable(self, spec):
+        """Straight-line distance from the arm base to the grasp point.
+
+        Has to be 3D: the fruiting wire sits 0.3-0.4 m above the arm base, so a
+        horizontal-only test would wave through clusters that are past the
+        envelope once the height is counted.
+        """
+        ax, ay, az = self.arm_origin()
+        d = math.sqrt((spec["x"] - ax) ** 2 + (spec["y"] - ay) ** 2
+                      + (spec["grasp_z"] - az) ** 2)
+        return REACH_MIN <= d <= REACH, d
 
     # ------------------------------------------------------------------ ROS
     def wait_for_services(self):
@@ -194,85 +280,118 @@ class GrapeHarvester(object):
         return m.pose[m.name.index(name)]
 
     # ---------------------------------------------------------------- scene
-    def spawn_bunches(self):
-        """Spawn the clusters and hang them on the fruiting wire.
+    def spawn_bunches(self, specs):
+        """Spawn every cluster in the block and hang it on its row's wire.
 
-        Physics is paused across spawn+attach: a free body would otherwise
-        fall for the few hundred ms it takes the attach service to run.
+        Physics is paused across spawn+attach: a free body would otherwise fall
+        for the few hundred ms it takes the attach service to run. Each cluster
+        gets its own SDF because bunch_layout() randomises peduncle length,
+        body length, berry count and mass per cluster.
         """
-        sdf = open(os.path.join(PKG_DIR, "models", "grape_bunch",
-                                "model.sdf")).read()
         self.pause()
         try:
-            for i, y in enumerate(BUNCH_Y):
-                name = bunch_name(i)
+            for spec in specs:
+                sdf = grape_bunch(**spec)
                 p = Pose()
-                p.position.x, p.position.y, p.position.z = VINE_X, y, WIRE_Z
-                self.spawn(name, sdf, "", p, "world")
+                p.position.x = spec["x"]
+                p.position.y = spec["y"]
+                p.position.z = WIRE_Z
+                p.orientation.w = 1.0
+                self.spawn(spec["name"], sdf, "", p, "world")
                 # wall clock, not rospy.sleep: /clock is frozen while physics
                 # is paused, so a sim-time sleep would never return
-                time.sleep(0.2)
-                r = self._att(self.attach, TRELLIS_MODEL, WIRE_LINK,
-                              name, BUNCH_LINK)
-                rospy.loginfo("hung %s on the wire (ok=%s)", name, r.ok)
-                time.sleep(0.1)
+                time.sleep(0.15)
+                r = self._att(self.attach, TRELLIS_MODEL,
+                              "wire_r%d_fruit" % spec["row"],
+                              spec["name"], BUNCH_LINK)
+                if not r.ok:
+                    rospy.logwarn("could not hang %s on wire_r%d_fruit",
+                                  spec["name"], spec["row"])
+                time.sleep(0.05)
         finally:
             self.unpause()
+        rospy.loginfo("spawned and hung %d clusters", len(specs))
         rospy.sleep(0.5)
 
     def _box(self, name, x, y, z, sx, sy, sz):
         ps = PoseStamped()
-        ps.header.frame_id = "world"
+        ps.header.frame_id = self.planning_frame
         ps.pose.position.x, ps.pose.position.y, ps.pose.position.z = x, y, z
         ps.pose.orientation.w = 1.0
         self.scene.add_box(name, ps, size=(sx, sy, sz))
+        self.in_scene.add(name)
 
     def _cyl(self, name, x, y, z, radius, height):
         ps = PoseStamped()
-        ps.header.frame_id = "world"
+        ps.header.frame_id = self.planning_frame
         ps.pose.position.x, ps.pose.position.y, ps.pose.position.z = x, y, z
         ps.pose.orientation.w = 1.0
         self.scene.add_cylinder(name, ps, height=height, radius=radius)
+        self.in_scene.add(name)
 
-    def build_planning_scene(self):
-        """Collision geometry for MoveIt.
+    def build_planning_scene(self, specs):
+        """Collision geometry for MoveIt: the whole block, built once.
 
-        Deliberately *not* included: the fruiting wire (8 mm, 75 mm above the
-        grasp point -- adding it only produces spurious planning failures) and
-        the peduncles, which the blades are supposed to close on.
+        The vineyard is fixed in the world, so this does not need rebuilding as
+        the platform drives. The crate and the vehicle are *robot links*, so
+        MoveIt avoids them from the URDF and they must not be added here.
+
+        Deliberately not included: the fruiting wires (4 mm radius, 75 mm above
+        the grasp points -- adding them only produces spurious planning
+        failures) and the peduncles, which the blades are supposed to close on.
         """
-        self._box("ground", 0, 0, -0.03, 4.0, 4.0, 0.05)
-        self._cyl("post_n", VINE_X, POST_Y, POST_H / 2, 0.05, POST_H)
-        self._cyl("post_s", VINE_X, -POST_Y, POST_H / 2, 0.05, POST_H)
-        self._box("canopy_wire", VINE_X, 0, 1.62, 0.02, 2 * POST_Y, 0.02)
-        self._box("crate", CRATE_XY[0], CRATE_XY[1], CRATE_H / 2,
-                  0.48, 0.32, CRATE_H)
+        margin = 1.5
+        self._box("ground", row_x(N_ROWS - 1) / 2.0, 0.0, -0.03,
+                  ROW_DX * (N_ROWS + 2) + margin, ROW_LEN + 2 * margin, 0.05)
 
-        # berry bodies only -- the top of the body sits 75 mm below the grasp
-        # point, so the blades never have to plan through it
-        body_top = WIRE_Z - PEDU_LEN
-        for i in range(len(BUNCH_Y)):
-            self._cyl(bunch_name(i), VINE_X, BUNCH_Y[i],
-                      body_top - BODY_LEN / 2, 0.065, BODY_LEN)
+        for r in range(N_ROWS):
+            x = row_x(r)
+            for i in range(PANELS_PER_ROW + 1):
+                self._cyl("post_r%d_%d" % (r, i), x,
+                          -ROW_LEN / 2.0 + i * PANEL_W, POST_H / 2,
+                          0.05, POST_H)
+            self._box("canopy_r%d" % r, x, 0.0, CANOPY_Z,
+                      0.02, ROW_LEN, 0.02)
+
+        # berry bodies only -- the top of each body sits pedu_len below the
+        # wire, so the blades never have to plan through it
+        for spec in specs:
+            self._cyl(spec["name"], spec["x"], spec["y"],
+                      WIRE_Z - spec["pedu_len"] - spec["body_len"] / 2.0,
+                      spec["r_top"] * 0.9, spec["body_len"])
+
         rospy.sleep(1.0)
-        rospy.loginfo("planning scene: %s",
-                      sorted(self.scene.get_known_object_names()))
+        rospy.loginfo("planning scene: %d objects", len(self.in_scene))
 
-    def add_settled_cluster(self, name):
-        """Re-add a released cluster where it actually came to rest, so the
-        arm plans around the fruit already in the crate."""
+    def add_settled_cluster(self, spec):
+        """Re-add a released cluster where it actually came to rest.
+
+        The crate rides on the robot, so a cluster lying in it moves with the
+        vehicle and its world-frame collision object would go stale the moment
+        the platform drives off. It is therefore attached to `crate_link`
+        rather than added to the world -- MoveIt then carries it along.
+        """
+        name = spec["name"]
         p = self.model_pose(name)
         if p is None:
             rospy.logwarn("  could not read %s pose; crate contents not added "
                           "to the planning scene", name)
             return
-        # model origin is the top of the peduncle; the berry body hangs below
-        self._cyl(name + "_in_crate",
-                  p.position.x, p.position.y,
-                  p.position.z - PEDU_LEN - BODY_LEN / 2.0,
-                  0.075, BODY_LEN)
+        bx, by, bz = self.world_to_base(
+            p.position.x, p.position.y,
+            p.position.z - spec["pedu_len"] - spec["body_len"] / 2.0)
+
+        ps = PoseStamped()
+        ps.header.frame_id = "base_link"
+        ps.pose.position.x, ps.pose.position.y, ps.pose.position.z = bx, by, bz
+        ps.pose.orientation.w = 1.0
+        self.scene.attach_box("crate_link", name + "_in_crate", pose=ps,
+                              size=(2 * spec["r_top"] + 0.02,
+                                    2 * spec["r_top"] + 0.02,
+                                    spec["body_len"]),
+                              touch_links=["crate_link", "base_link"])
         rospy.sleep(0.4)
-        rospy.loginfo("  %s added to the planning scene where it landed", name)
+        rospy.loginfo("  %s added to the crate contents", name)
 
     # ------------------------------------------------------------- motions
     def gripper(self, q, what):
@@ -297,9 +416,8 @@ class GrapeHarvester(object):
 
         Going through IK explicitly and then planning in joint space is much
         more repeatable than handing OMPL a pose goal: a pose goal lets the
-        planner pick any of the many IK solutions, and the arm posture it
-        lands in decides whether the following straight-line descent is
-        possible at all.
+        planner pick any of the many IK solutions, and the arm posture it lands
+        in decides whether the following straight-line descent is possible.
         """
         req = GetPositionIKRequest()
         req.ik_request.group_name = "cr5_arm"
@@ -307,7 +425,7 @@ class GrapeHarvester(object):
         req.ik_request.robot_state = self.robot.get_current_state()
         req.ik_request.avoid_collisions = avoid
         ps = PoseStamped()
-        ps.header.frame_id = self.arm.get_planning_frame()
+        ps.header.frame_id = self.planning_frame
         ps.pose = pose
         req.ik_request.pose_stamped = ps
         req.ik_request.timeout = rospy.Duration(timeout)
@@ -369,12 +487,12 @@ class GrapeHarvester(object):
         return self.go_pose(pose, label)
 
     # ------------------------------------------------------- harvest cycle
-    def harvest(self, i, slot):
-        name = bunch_name(i)
-        pre, grasp, post = self.vine_poses(i)
-        over, release = self.crate_poses(slot)
-        rospy.loginfo("################ harvesting %s (y=%+.2f) ############",
-                      name, BUNCH_Y[i])
+    def harvest(self, spec, slot):
+        name = spec["name"]
+        pre, grasp, post = self.vine_poses(spec)
+        over, release = self.crate_poses(slot, spec["hang_below_tcp"])
+        rospy.loginfo("########### harvesting %s  (%.2f, %.2f, %.2f) #######",
+                      name, spec["x"], spec["y"], spec["grasp_z"])
 
         self.set_speed(0.35)
         if not self.gripper(BLADE_OPEN, "open"):
@@ -382,12 +500,13 @@ class GrapeHarvester(object):
         if not self.go_pose(pre, "%s pre_grasp" % name):
             return False
 
-        # The cluster body sits 75 mm under the grasp point, so keeping it as
+        # The cluster body sits just under the grasp point, so keeping it as
         # world collision geometry makes the planner refuse the last few
         # centimetres of the descent -- the very motion whose whole purpose is
         # to close on this fruit. Drop it here; it comes back as an *attached*
         # object once it is cut.
         self.scene.remove_world_object(name)
+        self.in_scene.discard(name)
         rospy.sleep(0.4)
         if not self.go_cartesian(grasp, "%s grasp" % name):
             return False
@@ -396,9 +515,11 @@ class GrapeHarvester(object):
         self.gripper(BLADE_CLOSED, "closed")
         rospy.sleep(0.4)
         # hand the cluster to the cutter *before* releasing the stem
-        r1 = self._att(self.attach, ROBOT_MODEL, ROBOT_EE_LINK, name, BUNCH_LINK)
+        r1 = self._att(self.attach, ROBOT_MODEL, ROBOT_EE_LINK, name,
+                       BUNCH_LINK)
         rospy.loginfo("  clamped in cutter (ok=%s)", r1.ok)
-        r2 = self._att(self.detach, TRELLIS_MODEL, WIRE_LINK, name, BUNCH_LINK)
+        r2 = self._att(self.detach, TRELLIS_MODEL,
+                       "wire_r%d_fruit" % spec["row"], name, BUNCH_LINK)
         rospy.loginfo("  stem cut (ok=%s)", r2.ok)
 
         # Bring the cluster back as geometry carried by the arm, so the planner
@@ -410,11 +531,13 @@ class GrapeHarvester(object):
         # Tool -X points roughly downward (exactly down only at PITCH=0), so
         # the cluster hangs along -X. The cross-section is oversized to absorb
         # the PITCH-induced misalignment -- collision padding, not a fruit model.
-        held.pose.position.x = -(BUNCH_DROP_BELOW_TCP - BODY_LEN / 2.0)
+        held.pose.position.x = -(spec["hang_below_tcp"]
+                                 - spec["body_len"] / 2.0)
         held.pose.orientation.w = 1.0
         self.scene.attach_box(
             ROBOT_EE_LINK, name, pose=held,
-            size=(BODY_LEN + 0.02, 0.19, 0.19),
+            size=(spec["body_len"] + 0.02,
+                  2 * spec["r_top"] + 0.05, 2 * spec["r_top"] + 0.05),
             touch_links=["Link6", "Link5", "ee_base",
                          "left_blade", "right_blade", "tcp_link"])
         rospy.sleep(0.5)
@@ -437,34 +560,93 @@ class GrapeHarvester(object):
         self.scene.remove_attached_object(ROBOT_EE_LINK, name=name)
         rospy.sleep(0.3)
         self.scene.remove_world_object(name)
-        r3 = self._att(self.detach, ROBOT_MODEL, ROBOT_EE_LINK, name, BUNCH_LINK)
+        r3 = self._att(self.detach, ROBOT_MODEL, ROBOT_EE_LINK, name,
+                       BUNCH_LINK)
         rospy.loginfo("  released into crate (ok=%s)", r3.ok)
         self.gripper(BLADE_OPEN, "open")
         rospy.sleep(1.5)
-        self.add_settled_cluster(name)
+        self.add_settled_cluster(spec)
 
         self.set_speed(0.35)
         if not self.go_pose(over, "%s clear of crate" % name):
             rospy.logwarn("  could not lift clear of the crate")
         return True
 
+    def harvest_here(self, specs, remaining):
+        """Cut every cluster in `remaining` the arm can reach from right here.
+
+        Returns (harvested, failed) name lists. `remaining` is mutated:
+        anything attempted is removed from it, so the caller never retries it
+        from the same standpoint.
+        """
+        harvested, failed = [], []
+        here = []
+        for spec in specs:
+            if spec["name"] not in remaining:
+                continue
+            ok, d = self.reachable(spec)
+            if ok:
+                here.append((d, spec))
+        here.sort(key=lambda t: t[0])
+
+        if not here:
+            rospy.loginfo("nothing within reach from this standpoint")
+            return harvested, failed
+
+        if not self.go_named("scan"):
+            rospy.logerr("cannot reach scan pose")
+            return harvested, [s["name"] for _, s in here]
+
+        for d, spec in here:
+            if self.slots_used >= len(CRATE_SLOTS):
+                rospy.logwarn("crate full (%d slots): stopping",
+                              len(CRATE_SLOTS))
+                break
+            remaining.discard(spec["name"])
+            rospy.loginfo("cluster %s at %.2f m from the column",
+                          spec["name"], d)
+            if self.harvest(spec, self.slots_used):
+                harvested.append(spec["name"])
+                self.slots_used += 1
+            else:
+                failed.append(spec["name"])
+                rospy.logerr("!!! %s NOT harvested, continuing", spec["name"])
+                # leave the arm somewhere sane before the next attempt
+                self.set_speed(0.35)
+                self.go_named("scan")
+
+        self.set_speed(0.35)
+        self.go_named("scan")
+        return harvested, failed
+
     # ----------------------------------------------------------------- run
-    def check_only(self):
-        """IK reachability preflight -- no motion."""
-        all_ok = True
+    def check_only(self, specs):
+        """IK reachability preflight from the current standpoint -- no motion."""
         checks = []
-        for i in range(len(BUNCH_Y)):
-            pre, grasp, post = self.vine_poses(i)
-            checks += [("b%d pre_grasp" % i, pre), ("b%d grasp" % i, grasp),
-                       ("b%d post_cut" % i, post)]
-        for s in range(len(BUNCH_Y)):
-            over, rel = self.crate_poses(s)
+        n_reach = 0
+        for spec in specs:
+            ok, d = self.reachable(spec)
+            if not ok:
+                continue
+            n_reach += 1
+            pre, grasp, post = self.vine_poses(spec)
+            checks += [("%s pre" % spec["name"], pre),
+                       ("%s grasp" % spec["name"], grasp),
+                       ("%s post" % spec["name"], post)]
+        for s in range(len(CRATE_SLOTS)):
+            over, rel = self.crate_poses(s, 0.35)
             checks += [("slot%d over" % s, over), ("slot%d release" % s, rel)]
+
+        ax, ay, az = self.arm_origin()
+        rospy.loginfo("arm column at (%.3f, %.3f, %.3f); %d of %d clusters "
+                      "within reach", ax, ay, az, n_reach, len(specs))
+        all_ok = True
         for label, pose in checks:
             target = self.solve_ik(pose)
-            r = math.sqrt(pose.position.x ** 2 + pose.position.y ** 2
-                          + (pose.position.z - 0.897) ** 2)
-            rospy.loginfo("%-16s (%+.3f, %+.3f, %.3f)  r=%.3f  %s",
+            r = math.sqrt((pose.position.x - ax) ** 2
+                          + (pose.position.y - ay) ** 2
+                          + (pose.position.z - az) ** 2)
+            rospy.loginfo("%-22s (%+.3f, %+.3f, %.3f)  r=%.3f  %s",
                           label, pose.position.x, pose.position.y,
                           pose.position.z, r,
                           "OK" if target else "UNREACHABLE")
@@ -473,7 +655,13 @@ class GrapeHarvester(object):
                       "ALL POSES REACHABLE" if all_ok else "SOME POSES FAILED")
         return all_ok
 
-    def run(self, verify=False):
+    def run_row(self, specs, row, driver=None, verify=False):
+        """Work one trellis row panel by panel.
+
+        With no driver this harvests whatever is reachable from where the robot
+        already stands, which is what --no-drive is for: it keeps the arm work
+        testable without depending on the base controller.
+        """
         baseline = {}
         if verify:
             m = rospy.wait_for_message("/gazebo/model_states", ModelStates,
@@ -481,54 +669,81 @@ class GrapeHarvester(object):
             for n, p in zip(m.name, m.pose):
                 baseline[n] = (p.position.x, p.position.y, p.position.z)
 
-        if not self.go_named("scan"):
-            rospy.logerr("cannot reach scan pose")
-            return False
-
+        row_specs = [s for s in specs if s["row"] == row]
+        remaining = set(s["name"] for s in row_specs)
         harvested, failed = [], []
-        for i in range(len(BUNCH_Y)):
-            if self.harvest(i, i):
-                harvested.append(bunch_name(i))
-            else:
-                failed.append(bunch_name(i))
-                rospy.logerr("!!! %s NOT harvested, continuing", bunch_name(i))
-                # leave the arm somewhere sane before the next attempt
-                self.set_speed(0.35)
-                self.go_named("scan")
 
-        self.set_speed(0.35)
-        self.go_named("scan")
+        if driver is None:
+            h, f = self.harvest_here(specs, remaining)
+            harvested += h
+            failed += f
+        else:
+            # One stop per cluster, not per panel: see the REACH note above.
+            # Parking once per 2 m panel would leave most of the fruit outside
+            # the envelope and uncut.
+            lane = aisle_x(row)          # aisle immediately in front of row
+            for spec in sorted(row_specs, key=lambda s: s["y"]):
+                if self.slots_used >= len(CRATE_SLOTS):
+                    rospy.logwarn("crate full (%d slots): stopping",
+                                  len(CRATE_SLOTS))
+                    break
+                if spec["name"] not in remaining:
+                    continue        # already cut from an earlier standpoint
+                rospy.loginfo("=" * 62)
+                rospy.loginfo("driving abreast of %s (panel %d, y=%+.2f)",
+                              spec["name"], spec["panel"], spec["y"])
+                if not self.go_named("stow"):
+                    rospy.logerr("cannot stow; refusing to drive")
+                    break
+                if not driver.drive_to_y(spec["y"], lane):
+                    rospy.logwarn("could not park at %s, skipping",
+                                  spec["name"])
+                    continue
+                rospy.sleep(0.5)
+                # whatever else came within reach at this stop is fair game
+                h, f = self.harvest_here(specs, remaining)
+                harvested += h
+                failed += f
+            self.go_named("stow")
 
         rospy.loginfo("=" * 62)
-        rospy.loginfo("harvested %d/%d: %s", len(harvested), len(BUNCH_Y),
+        rospy.loginfo("harvested %d of %d clusters on row %d: %s",
+                      len(harvested), len(row_specs), row,
                       ", ".join(harvested) if harvested else "none")
         if failed:
             rospy.logerr("failed: %s", ", ".join(failed))
-        self.report(baseline if verify else None)
+        if remaining:
+            rospy.loginfo("not attempted (out of reach or crate full): %d",
+                          len(remaining))
+        self.report(specs, harvested, baseline if verify else None)
         return not failed
 
-    def report(self, baseline):
+    def report(self, specs, harvested, baseline):
         m = rospy.wait_for_message("/gazebo/model_states", ModelStates,
                                    timeout=20)
-        crate_x, crate_y = CRATE_XY
+        by_name = {s["name"]: s for s in specs}
         in_crate = 0
-        for i in range(len(BUNCH_Y)):
-            n = bunch_name(i)
-            if n not in m.name:
+        for name in harvested:
+            if name not in m.name:
                 continue
-            p = m.pose[m.name.index(n)].position
-            ok = (abs(p.x - crate_x) < 0.25 and abs(p.y - crate_y) < 0.20
-                  and p.z < 0.7)
+            p = m.pose[m.name.index(name)].position
+            # the crate rides on the deck, so "in the crate" is a base_link
+            # question, not a world one
+            bx, by, bz = self.world_to_base(p.x, p.y, p.z)
+            ok = (abs(bx - CRATE_BASE_XYZ[0]) < CRATE_INNER[0] / 2 + 0.05
+                  and abs(by - CRATE_BASE_XYZ[1]) < CRATE_INNER[1] / 2 + 0.05
+                  and bz < CRATE_BASE_XYZ[2] + CRATE_INNER[2] + 0.10)
             in_crate += int(ok)
-            rospy.loginfo("  %-9s at (%+.3f, %+.3f, %.3f)  %s", n, p.x, p.y, p.z,
+            rospy.loginfo("  %-16s base_link (%+.3f, %+.3f, %.3f)  %s",
+                          name, bx, by, bz,
                           "IN CRATE" if ok else "NOT IN CRATE")
-        rospy.loginfo("clusters in crate: %d/%d", in_crate, len(BUNCH_Y))
+        rospy.loginfo("clusters in crate: %d/%d", in_crate, len(harvested))
 
         if baseline:
             rospy.loginfo("-- collision check: things the arm must not move --")
             moved = []
             for n, p in zip(m.name, m.pose):
-                if n.startswith("grape") or n not in baseline:
+                if n in by_name or n not in baseline or n == ROBOT_MODEL:
                     continue
                 b = baseline[n]
                 d = math.sqrt((p.position.x - b[0]) ** 2
@@ -538,9 +753,10 @@ class GrapeHarvester(object):
                     moved.append((n, d))
             if moved:
                 for n, d in moved:
-                    rospy.logerr("  %s MOVED by %.3f m -- something was hit", n, d)
+                    rospy.logerr("  %s MOVED by %.3f m -- something was hit",
+                                 n, d)
             else:
-                rospy.loginfo("  trellis, crate and ground all unmoved: "
+                rospy.loginfo("  trellis and ground unmoved: "
                               "no unintended contact")
         rospy.loginfo("=" * 62)
 
@@ -551,22 +767,37 @@ def main():
                     help="report IK reachability of every key pose and exit")
     ap.add_argument("--no-spawn", action="store_true",
                     help="assume the clusters are already in the world")
+    ap.add_argument("--no-drive", action="store_true",
+                    help="harvest only what is reachable from the current "
+                         "standpoint; do not command the base")
+    ap.add_argument("--row", type=int, default=0,
+                    help="which trellis row to work (0..%d)" % (N_ROWS - 1))
     ap.add_argument("--verify", action="store_true",
                     help="also check nothing but the fruit moved")
     args, _ = ap.parse_known_args(rospy.myargv()[1:])
 
     rospy.init_node("grape_harvester", anonymous=False)
+    specs = bunch_layout()
+    rospy.loginfo("vineyard block: %d clusters over %d rows",
+                  len(specs), N_ROWS)
+
     h = GrapeHarvester()
 
     if args.check_only:
-        h.build_planning_scene()
-        sys.exit(0 if h.check_only() else 1)
+        h.build_planning_scene(specs)
+        sys.exit(0 if h.check_only(specs) else 1)
 
     h.wait_for_services()
     if not args.no_spawn:
-        h.spawn_bunches()
-    h.build_planning_scene()
-    ok = h.run(verify=args.verify)
+        h.spawn_bunches(specs)
+    h.build_planning_scene(specs)
+
+    driver = None
+    if not args.no_drive:
+        from drive import BaseDriver
+        driver = BaseDriver()
+
+    ok = h.run_row(specs, args.row, driver=driver, verify=args.verify)
     rospy.loginfo("result: %s", "SUCCESS" if ok else "FAILED")
     moveit_commander.roscpp_shutdown()
     sys.exit(0 if ok else 1)
