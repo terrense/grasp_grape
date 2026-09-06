@@ -45,7 +45,9 @@ import tf.transformations as tft
 from geometry_msgs.msg import Pose, PoseStamped, Quaternion
 
 import moveit_commander
-from moveit_msgs.srv import GetPositionIK, GetPositionIKRequest
+from moveit_msgs.msg import PlanningSceneComponents
+from moveit_msgs.srv import (GetPositionIK, GetPositionIKRequest,
+                             GetPlanningScene, GetPlanningSceneRequest)
 
 from std_srvs.srv import Empty
 from gazebo_msgs.msg import ModelStates
@@ -159,6 +161,9 @@ class GrapeHarvester(object):
 
         rospy.wait_for_service("/compute_ik", timeout=60.0)
         self.ik = rospy.ServiceProxy("/compute_ik", GetPositionIK)
+        rospy.wait_for_service("/get_planning_scene", timeout=60.0)
+        self.get_scene = rospy.ServiceProxy("/get_planning_scene",
+                                            GetPlanningScene)
 
         self.slots_used = 0
         self.in_scene = set()
@@ -411,6 +416,26 @@ class GrapeHarvester(object):
         self.arm.clear_pose_targets()
         return ok
 
+    def current_state(self):
+        """Robot state *including* whatever is attached to the cutter.
+
+        RobotCommander.get_current_state() reports joint values only. Seeding a
+        collision-aware IK request with it means IK cannot see a clamped
+        cluster, so it happily returns a solution that the planner then refuses
+        -- and the refusal surfaces as a bare "ABORTED: TIMED_OUT", which says
+        nothing about the real cause.
+        """
+        try:
+            req = GetPlanningSceneRequest()
+            req.components.components = (
+                PlanningSceneComponents.ROBOT_STATE
+                | PlanningSceneComponents.ROBOT_STATE_ATTACHED_OBJECTS)
+            return self.get_scene(req).scene.robot_state
+        except rospy.ServiceException as e:
+            rospy.logwarn("planning scene state unavailable (%s); falling "
+                          "back to joint values only", e)
+            return self.robot.get_current_state()
+
     def solve_ik(self, pose, avoid=True, timeout=3.0):
         """Collision-aware IK seeded from the current state.
 
@@ -422,7 +447,7 @@ class GrapeHarvester(object):
         req = GetPositionIKRequest()
         req.ik_request.group_name = "cr5_arm"
         req.ik_request.ik_link_name = self.arm.get_end_effector_link()
-        req.ik_request.robot_state = self.robot.get_current_state()
+        req.ik_request.robot_state = self.current_state()
         req.ik_request.avoid_collisions = avoid
         ps = PoseStamped()
         ps.header.frame_id = self.planning_frame
@@ -487,6 +512,24 @@ class GrapeHarvester(object):
         return self.go_pose(pose, label)
 
     # ------------------------------------------------------- harvest cycle
+    def abandon(self, spec):
+        """Let go of a cluster that is already cut and still in the cutter.
+
+        Without this the arm keeps carrying it: the Gazebo joint and the MoveIt
+        attached box both survive a failed retreat, so every later plan is made
+        with a phantom cluster welded to the flange. That is what turned one
+        failed retreat into three in the first run of this code.
+        """
+        name = spec["name"]
+        rospy.logwarn("  abandoning %s: releasing it where the arm stands",
+                      name)
+        self.scene.remove_attached_object(ROBOT_EE_LINK, name=name)
+        rospy.sleep(0.3)
+        self.scene.remove_world_object(name)
+        self._att(self.detach, ROBOT_MODEL, ROBOT_EE_LINK, name, BUNCH_LINK)
+        self.gripper(BLADE_OPEN, "open")
+        rospy.sleep(0.5)
+
     def harvest(self, spec, slot):
         name = spec["name"]
         pre, grasp, post = self.vine_poses(spec)
@@ -528,11 +571,23 @@ class GrapeHarvester(object):
         # supports.)
         held = PoseStamped()
         held.header.frame_id = "tcp_link"
-        # Tool -X points roughly downward (exactly down only at PITCH=0), so
-        # the cluster hangs along -X. The cross-section is oversized to absorb
-        # the PITCH-induced misalignment -- collision padding, not a fruit model.
-        held.pose.position.x = -(spec["hang_below_tcp"]
-                                 - spec["body_len"] / 2.0)
+        # Tool +X points *down*, so the cluster hangs along +X. tool_quat is
+        # Rz(az)*Ry(90+PITCH) and the X column of that comes out at world
+        # (-sin(PITCH)cos(az), -sin(PITCH)sin(az), -cos(PITCH)) -- z = -0.94 at
+        # PITCH = 20 deg.
+        #
+        # The fixed-pedestal version had this negative, which hung the
+        # collision box 0.29 m *above* the cutter instead of below it. Nothing
+        # caught it while every cluster had the same peduncle length and the
+        # box stopped just short of the canopy wire; once bunch_layout()
+        # randomised the grasp height the box started colliding with
+        # canopy_r<n> on the retreat, and the resulting unsampleable goal was
+        # reported only as ABORTED: TIMED_OUT.
+        #
+        # The cross-section is oversized to absorb the PITCH-induced
+        # misalignment -- collision padding, not a fruit model.
+        held.pose.position.x = (spec["hang_below_tcp"]
+                                - spec["body_len"] / 2.0)
         held.pose.orientation.w = 1.0
         self.scene.attach_box(
             ROBOT_EE_LINK, name, pose=held,
@@ -547,12 +602,16 @@ class GrapeHarvester(object):
         # kinematically driven joints as little as possible.
         self.set_speed(0.2)
 
+        # Past this point the cluster is off the vine and in the cutter, so a
+        # failure cannot just return -- it has to put the fruit down first.
         rospy.loginfo("--- retreat ---")
         if not self.go_cartesian(post, "%s post_cut" % name):
+            self.abandon(spec)
             return False
 
         rospy.loginfo("--- carry to crate slot %d ---", slot)
         if not self.go_pose(over, "%s over_crate" % name):
+            self.abandon(spec)
             return False
         self.go_cartesian(release, "%s release" % name)
 
