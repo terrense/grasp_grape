@@ -118,7 +118,24 @@ SETTLE_AFTER_STOP = 1.0            # s of standing still before the arm moves
 
 CRATE_T = 0.014                    # crate floor thickness, matches the xacro
 CRATE_FLOOR_Z = CRATE_BASE_XYZ[2] + CRATE_T
-DROP_CLEARANCE = 0.05              # fruit hangs this far above the floor
+DROP_CLEARANCE = 0.06              # fruit hangs this far above the crate floor
+                                   # before release. 0.12 was tried and the
+                                   # bunch bounced back out of the crate; 0.05
+                                   # left it still inside the collar. This is
+                                   # the gap between those.
+LANDING_SETTLE = 2.5               # s to let a dropped bunch come to rest
+                                   # before anything measures where it is
+
+# Whether fruit already in the crate goes into the planning scene. Off by
+# default. The intent was to stop the arm ploughing through the pile on the
+# next drop, but the head has to come down into the crate to release at all, so
+# a box sitting there puts the arm in collision with its own load the instant it
+# is added: every plan after the first cut then aborts with
+# START_STATE_IN_COLLISION, including the stow that has to happen before the
+# platform may drive. The crate is one bunch deep and the head always comes in
+# from directly above, so the risk it was guarding against is small. Turn it on
+# with --track-crate if the crate ever gets deep enough to matter.
+TRACK_CRATE_CONTENTS = False
 
 # Prefilter only: a cluster is attempted if its grasp point is within this
 # straight-line distance of the arm base. The CR10 reaches 1300 mm to the
@@ -216,6 +233,7 @@ class GrapeHarvester(object):
 
         self.slots_used = 0
         self.in_scene = set()
+        self.track_crate = TRACK_CRATE_CONTENTS
 
         rospy.loginfo("planning frame: %s", self.planning_frame)
         rospy.loginfo("end effector  : %s", self.arm.get_end_effector_link())
@@ -535,24 +553,40 @@ class GrapeHarvester(object):
         the platform drives off. It is therefore attached to `crate_link`
         rather than added to the world -- MoveIt then carries it along.
         """
+        if not self.track_crate:
+            return
         name = spec["name"]
         p = self.model_pose(name)
         if p is None:
             rospy.logwarn("  could not read %s pose; crate contents not added "
                           "to the planning scene", name)
             return
-        bx, by, bz = self.world_to_base(
-            p.position.x, p.position.y,
-            p.position.z - spec["pedu_len"] - spec["body_len"] / 2.0)
+        bx, by, _ = self.world_to_base(p.position.x, p.position.y,
+                                       p.position.z)
+
+        # Lying on the floor, not standing on end. A 0.30 m bunch modelled
+        # upright in a 0.20 m crate puts its top 0.17 m proud of the rim, which
+        # is exactly where the collar is once the arm has let go -- the planner
+        # then refuses the stow pose and the row run stops after one cluster.
+        # Dropped fruit topples; the long axis goes along the crate.
+        lie_z = CRATE_FLOOR_Z + spec["r_top"] + 0.01
+        # keep it inside the crate footprint even if the drop scattered
+        half = (CRATE_INNER[0] / 2.0 - spec["r_top"],
+                CRATE_INNER[1] / 2.0 - spec["r_top"])
+        bx = max(CRATE_BASE_XYZ[0] - half[0],
+                 min(CRATE_BASE_XYZ[0] + half[0], bx))
+        by = max(CRATE_BASE_XYZ[1] - half[1],
+                 min(CRATE_BASE_XYZ[1] + half[1], by))
 
         ps = PoseStamped()
         ps.header.frame_id = "base_link"
-        ps.pose.position.x, ps.pose.position.y, ps.pose.position.z = bx, by, bz
+        ps.pose.position.x, ps.pose.position.y = bx, by
+        ps.pose.position.z = lie_z
         ps.pose.orientation.w = 1.0
         self.scene.attach_box("crate_link", name + "_in_crate", pose=ps,
-                              size=(2 * spec["r_top"] + 0.02,
+                              size=(spec["body_len"] + 0.02,
                                     2 * spec["r_top"] + 0.02,
-                                    spec["body_len"]),
+                                    2 * spec["r_top"] + 0.02),
                               touch_links=["crate_link", "base_link"])
         rospy.sleep(0.4)
         rospy.loginfo("  %s added to the crate contents", name)
@@ -801,12 +835,17 @@ class GrapeHarvester(object):
         r3 = self._att(self.detach, ROBOT_MODEL, ROBOT_EE_LINK, name,
                        BUNCH_LINK)
         rospy.loginfo("  released into the crate (ok=%s)", r3.ok)
-        rospy.sleep(1.5)
-        self.add_settled_cluster(spec)
+        rospy.sleep(LANDING_SETTLE)
 
+        # Lift clear first, THEN tell the planner about the fruit that is now
+        # lying in the crate. Doing it the other way round drops a collision
+        # object around the head while the head is still down inside the crate,
+        # and the next plan starts in collision with it -- which is what made
+        # "clear of crate" fail on the first cut that otherwise worked.
         self.set_speed(0.35)
         if not self.go_pose(over, "%s clear of crate" % name):
             rospy.logwarn("  could not lift clear of the crate")
+        self.add_settled_cluster(spec)
         return True
 
     def harvest_here(self, specs, remaining):
@@ -1116,6 +1155,9 @@ def main():
                          "within reach whenever the platform is stopped")
     ap.add_argument("--row", type=int, default=0,
                     help="which trellis row to work (0..%d)" % (N_ROWS - 1))
+    ap.add_argument("--track-crate", action="store_true",
+                    help="put fruit already in the crate into the planning "
+                         "scene (see TRACK_CRATE_CONTENTS)")
     ap.add_argument("--verify", action="store_true",
                     help="also check nothing but the fruit moved")
     args, _ = ap.parse_known_args(rospy.myargv()[1:])
@@ -1126,6 +1168,8 @@ def main():
                   len(specs), N_ROWS)
 
     h = GrapeHarvester()
+    if args.track_crate:
+        h.track_crate = True
 
     if args.check_only:
         h.build_planning_scene(specs)
