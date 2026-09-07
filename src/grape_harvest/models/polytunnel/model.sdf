@@ -858,24 +858,14 @@
         <pose>12.0930 0.0000 2.2000 1.5708 0 0</pose>
         <geometry><cylinder><radius>0.020</radius><length>12.000</length></cylinder></geometry>
       </collision>
-      <visual name="film_0">
-        <pose>-0.6000 0.0000 1.1000 0 0.00000 0</pose>
-        <cast_shadows>false</cast_shadows>
-        <geometry><box><size>0.012 12.000 2.2000</size></box></geometry>
-        <material>
-          <ambient>0.85 0.88 0.90 0.28</ambient>
-          <diffuse>0.92 0.95 0.97 0.28</diffuse>
-          <specular>0.30 0.30 0.30 8</specular>
-        </material>
-      </visual>
       <visual name="film_2">
         <pose>-0.2826 0.0000 2.5134 0 0.79173 0</pose>
         <cast_shadows>false</cast_shadows>
         <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
         <material>
-          <ambient>0.85 0.88 0.90 0.28</ambient>
-          <diffuse>0.92 0.95 0.97 0.28</diffuse>
-          <specular>0.30 0.30 0.30 8</specular>
+          <ambient>0.82 0.86 0.88 0.55</ambient>
+          <diffuse>0.90 0.94 0.96 0.55</diffuse>
+          <specular>0.45 0.45 0.45 16</specular>
         </material>
       </visual>
       <visual name="film_3">
@@ -883,9 +873,9 @@
         <cast_shadows>false</cast_shadows>
         <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
         <material>
-          <ambient>0.85 0.88 0.90 0.28</ambient>
-          <diffuse>0.92 0.95 0.97 0.28</diffuse>
-          <specular>0.30 0.30 0.30 8</specular>
+          <ambient>0.82 0.86 0.88 0.55</ambient>
+          <diffuse>0.90 0.94 0.96 0.55</diffuse>
+          <specular>0.45 0.45 0.45 16</specular>
         </material>
       </visual>
       <visual name="film_4">
@@ -893,9 +883,9 @@
         <cast_shadows>false</cast_shadows>
         <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
         <material>
-          <ambient>0.85 0.88 0.90 0.28</ambient>
-          <diffuse>0.92 0.95 0.97 0.28</diffuse>
-          <specular>0.30 0.30 0.30 8</specular>
+          <ambient>0.82 0.86 0.88 0.55</ambient>
+          <diffuse>0.90 0.94 0.96 0.55</diffuse>
+          <specular>0.45 0.45 0.45 16</specular>
         </material>
       </visual>
       <visual name="film_5">
@@ -903,9 +893,9 @@
         <cast_shadows>false</cast_shadows>
         <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
         <material>
-          <ambient>0.85 0.88 0.90 0.28</ambient>
-          <diffuse>0.92 0.95 0.97 0.28</diffuse>
-          <specular>0.30 0.30 0.30 8</specular>
+          <ambient>0.82 0.86 0.88 0.55</ambient>
+          <diffuse>0.90 0.94 0.96 0.55</diffuse>
+          <specular>0.45 0.45 0.45 16</specular>
         </material>
       </visual>
       <visual name="film_6">
@@ -913,9 +903,9 @@
         <cast_shadows>false</cast_shadows>
         <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
         <material>
-          <ambient>0.85 0.88 0.90 0.28</ambient>
-          <diffuse>0.92 0.95 0.97 0.28</diffuse>
-          <specular>0.30 0.30 0.30 8</specular>
+          <ambient>0.82 0.86 0.88 0.55</ambient>
+          <diffuse>0.90 0.94 0.96 0.55</diffuse>
+          <specular>0.45 0.45 0.45 16</specular>
         </material>
       </visual>
       <visual name="film_7">
@@ -923,9 +913,9 @@
         <cast_shadows>false</cast_shadows>
         <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
         <material>
-          <ambient>0.85 0.88 0.90 0.28</ambient>
-          <diffuse>0.92 0.95 0.97 0.28</diffuse>
-          <specular>0.30 0.30 0.30 8</specular>
+          <ambient>0.82 0.86 0.88 0.55</ambient>
+          <diffuse>0.90 0.94 0.96 0.55</diffuse>
+          <specular>0.45 0.45 0.45 16</specular>
         </material>
       </visual>
       <visual name="film_8">
@@ -933,9 +923,9 @@
         <cast_shadows>false</cast_shadows>
         <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
         <material>
-          <ambient>0.85 0.88 0.90 0.28</ambient>
-          <diffuse>0.92 0.95 0.97 0.28</diffuse>
-          <specular>0.30 0.30 0.30 8</specular>
+          <ambient>0.82 0.86 0.88 0.55</ambient>
+          <diffuse>0.90 0.94 0.96 0.55</diffuse>
+          <specular>0.45 0.45 0.45 16</specular>
         </material>
       </visual>
       <visual name="film_9">
@@ -943,9 +933,9 @@
         <cast_shadows>false</cast_shadows>
         <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
         <material>
-          <ambient>0.85 0.88 0.90 0.28</ambient>
-          <diffuse>0.92 0.95 0.97 0.28</diffuse>
-          <specular>0.30 0.30 0.30 8</specular>
+          <ambient>0.82 0.86 0.88 0.55</ambient>
+          <diffuse>0.90 0.94 0.96 0.55</diffuse>
+          <specular>0.45 0.45 0.45 16</specular>
         </material>
       </visual>
       <visual name="film_10">
@@ -953,9 +943,9 @@
         <cast_shadows>false</cast_shadows>
         <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
         <material>
-          <ambient>0.85 0.88 0.90 0.28</ambient>
-          <diffuse>0.92 0.95 0.97 0.28</diffuse>
-          <specular>0.30 0.30 0.30 8</specular>
+          <ambient>0.82 0.86 0.88 0.55</ambient>
+          <diffuse>0.90 0.94 0.96 0.55</diffuse>
+          <specular>0.45 0.45 0.45 16</specular>
         </material>
       </visual>
       <visual name="film_11">
@@ -963,9 +953,9 @@
         <cast_shadows>false</cast_shadows>
         <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
         <material>
-          <ambient>0.85 0.88 0.90 0.28</ambient>
-          <diffuse>0.92 0.95 0.97 0.28</diffuse>
-          <specular>0.30 0.30 0.30 8</specular>
+          <ambient>0.82 0.86 0.88 0.55</ambient>
+          <diffuse>0.90 0.94 0.96 0.55</diffuse>
+          <specular>0.45 0.45 0.45 16</specular>
         </material>
       </visual>
       <visual name="film_12">
@@ -973,9 +963,9 @@
         <cast_shadows>false</cast_shadows>
         <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
         <material>
-          <ambient>0.85 0.88 0.90 0.28</ambient>
-          <diffuse>0.92 0.95 0.97 0.28</diffuse>
-          <specular>0.30 0.30 0.30 8</specular>
+          <ambient>0.82 0.86 0.88 0.55</ambient>
+          <diffuse>0.90 0.94 0.96 0.55</diffuse>
+          <specular>0.45 0.45 0.45 16</specular>
         </material>
       </visual>
       <visual name="film_13">
@@ -983,9 +973,9 @@
         <cast_shadows>false</cast_shadows>
         <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
         <material>
-          <ambient>0.85 0.88 0.90 0.28</ambient>
-          <diffuse>0.92 0.95 0.97 0.28</diffuse>
-          <specular>0.30 0.30 0.30 8</specular>
+          <ambient>0.82 0.86 0.88 0.55</ambient>
+          <diffuse>0.90 0.94 0.96 0.55</diffuse>
+          <specular>0.45 0.45 0.45 16</specular>
         </material>
       </visual>
       <visual name="film_14">
@@ -993,9 +983,9 @@
         <cast_shadows>false</cast_shadows>
         <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
         <material>
-          <ambient>0.85 0.88 0.90 0.28</ambient>
-          <diffuse>0.92 0.95 0.97 0.28</diffuse>
-          <specular>0.30 0.30 0.30 8</specular>
+          <ambient>0.82 0.86 0.88 0.55</ambient>
+          <diffuse>0.90 0.94 0.96 0.55</diffuse>
+          <specular>0.45 0.45 0.45 16</specular>
         </material>
       </visual>
       <visual name="film_15">
@@ -1003,9 +993,9 @@
         <cast_shadows>false</cast_shadows>
         <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
         <material>
-          <ambient>0.85 0.88 0.90 0.28</ambient>
-          <diffuse>0.92 0.95 0.97 0.28</diffuse>
-          <specular>0.30 0.30 0.30 8</specular>
+          <ambient>0.82 0.86 0.88 0.55</ambient>
+          <diffuse>0.90 0.94 0.96 0.55</diffuse>
+          <specular>0.45 0.45 0.45 16</specular>
         </material>
       </visual>
       <visual name="film_16">
@@ -1013,9 +1003,9 @@
         <cast_shadows>false</cast_shadows>
         <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
         <material>
-          <ambient>0.85 0.88 0.90 0.28</ambient>
-          <diffuse>0.92 0.95 0.97 0.28</diffuse>
-          <specular>0.30 0.30 0.30 8</specular>
+          <ambient>0.82 0.86 0.88 0.55</ambient>
+          <diffuse>0.90 0.94 0.96 0.55</diffuse>
+          <specular>0.45 0.45 0.45 16</specular>
         </material>
       </visual>
       <visual name="film_17">
@@ -1023,19 +1013,9 @@
         <cast_shadows>false</cast_shadows>
         <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
         <material>
-          <ambient>0.85 0.88 0.90 0.28</ambient>
-          <diffuse>0.92 0.95 0.97 0.28</diffuse>
-          <specular>0.30 0.30 0.30 8</specular>
-        </material>
-      </visual>
-      <visual name="film_19">
-        <pose>12.0930 0.0000 1.1000 0 3.14159 0</pose>
-        <cast_shadows>false</cast_shadows>
-        <geometry><box><size>0.012 12.000 2.2000</size></box></geometry>
-        <material>
-          <ambient>0.85 0.88 0.90 0.28</ambient>
-          <diffuse>0.92 0.95 0.97 0.28</diffuse>
-          <specular>0.30 0.30 0.30 8</specular>
+          <ambient>0.82 0.86 0.88 0.55</ambient>
+          <diffuse>0.90 0.94 0.96 0.55</diffuse>
+          <specular>0.45 0.45 0.45 16</specular>
         </material>
       </visual>
     </link>

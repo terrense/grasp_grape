@@ -29,8 +29,10 @@ class BaseDriver(object):
     V_MAX = 0.45          # m/s; a harvesting platform crawls
     W_MAX = 0.7
     K_ALONG = 0.9
-    K_CROSS = 1.4
+    K_LOOK = 2.2          # how hard a lane offset bends the aim heading
+    AIM_MAX = 0.6         # rad; cap so it never aims across the row
     K_YAW = 2.0
+    LANE_TOL = 0.06       # m; how close to the lane counts as arrived
 
     def __init__(self, cmd_topic="/cmd_vel"):
         self.pub = rospy.Publisher(cmd_topic, Twist, queue_size=1)
@@ -67,22 +69,36 @@ class BaseDriver(object):
         while not rospy.is_shutdown():
             x, y, yaw = self.pose
             along = (target_y - y) * sgn
-            if abs(target_y - y) < tol:
+            # both conditions: arriving at the right y while 0.25 m off the lane
+            # is not arriving. The arm's whole reach budget is spent on the
+            # 0.80 m standoff, so lane error comes straight off the margin.
+            if abs(target_y - y) < tol and abs(x - lane_x) < self.LANE_TOL:
                 break
             if (rospy.Time.now() - t0).to_sec() > timeout:
                 rospy.logwarn("drive timed out at y=%.2f", y)
                 self.stop()
                 return False
             cross = (x - lane_x) * sgn
-            yaw_err = wrap(heading - yaw)
+
+            # Steer to a heading that *aims back at the lane*, rather than
+            # summing a cross-track term and a heading term. Summing them has a
+            # biased equilibrium: the robot can sit at a steady lane offset
+            # where -K_CROSS*cross exactly cancels K_YAW*yaw_err, and it then
+            # drives the whole row crabbed and off-line. That is how an earlier
+            # run ended up 0.92 m off lane and wedged in the vine row.
+            aim = math.atan(self.K_LOOK * cross)
+            aim = max(-self.AIM_MAX, min(self.AIM_MAX, aim))
+            yaw_err = wrap((heading - sgn * aim) - yaw)
 
             t = Twist()
             t.linear.x = max(-self.V_MAX,
                              min(self.V_MAX, self.K_ALONG * along))
-            # crab back onto the lane centre, then straighten up
             t.angular.z = max(-self.W_MAX,
-                              min(self.W_MAX,
-                                  -self.K_CROSS * cross + self.K_YAW * yaw_err))
+                              min(self.W_MAX, self.K_YAW * yaw_err))
+            # slow down while the heading is still well off, so the platform
+            # straightens before it covers much ground
+            if abs(yaw_err) > 0.25:
+                t.linear.x *= 0.35
             self.pub.publish(t)
             rate.sleep()
         self.stop()

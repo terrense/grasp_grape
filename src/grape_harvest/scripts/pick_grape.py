@@ -234,7 +234,10 @@ class GrapeHarvester(object):
         az = math.atan2(y - ay, x - ax)
         grasp = pose_at(x, y, z, az)
         pre = backed_off(x, y, z, az, APPROACH)
-        post = backed_off(x, y, z, az, RETREAT, lift=0.05)
+        # straight back along the approach axis, no lift: with the fruit at
+        # 1.4-1.7 m the arm is already near full stretch, and lifting on the way
+        # out extends it further instead of unloading it
+        post = backed_off(x, y, z, az, RETREAT)
         return pre, grasp, post
 
     def crate_poses(self, slot, hang_below_tcp):
@@ -610,12 +613,29 @@ class GrapeHarvester(object):
         held.pose.position.x = (spec["hang_below_tcp"]
                                 - spec["body_len"] / 2.0)
         held.pose.orientation.w = 1.0
+        # Link2..Link6 are all in touch_links, and the cross-section padding is
+        # small, because of how this arm has to stand to reach 1.4-1.7 m fruit:
+        # the shoulder is at 0.75 m, so the arm points *up* and the forearm runs
+        # alongside whatever is hanging from the cutter. Contact between the
+        # carried cluster and the forearm is geometrically unavoidable and
+        # physically just a brush, but MoveIt counts it as a collision and
+        # refuses every retreat -- which is exactly what the first CR10 run did,
+        # cutting 3 clusters and failing to retreat with all 3. The upper arm
+        # had to be added too: the cluster centre sits about 0.27 m below the
+        # tool, i.e. around 1.34 m, which is between the shoulder at 0.75 m and
+        # the wrist at 1.6 m, so it runs alongside Link2 as well. Only Link1 is
+        # left out -- fruit down at the shoulder means the plan is genuinely
+        # wrong and the run should stop.
+        #
+        # The cost of this is real: the sim no longer catches the cutter
+        # pressing fruit against the arm. That is an acceptable trade for a
+        # compliant bunch on a stem, but it would not be for a rigid payload.
         self.scene.attach_box(
             ROBOT_EE_LINK, name, pose=held,
             size=(spec["body_len"] + 0.02,
-                  2 * spec["r_top"] + 0.05, 2 * spec["r_top"] + 0.05),
-            touch_links=["Link6", "Link5", "ee_base",
-                         "left_blade", "right_blade", "tcp_link"])
+                  2 * spec["r_top"] + 0.02, 2 * spec["r_top"] + 0.02),
+            touch_links=["Link6", "Link5", "Link4", "Link3", "Link2",
+                         "ee_base", "left_blade", "right_blade", "tcp_link"])
         rospy.sleep(0.5)
 
         # Carrying the clamped cluster: slower, so the extra rigid constraint

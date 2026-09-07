@@ -17,12 +17,24 @@ from sensor_msgs.msg import Image
 PIX_FMT = {"rgb8": "rgb24", "bgr8": "bgr24"}
 
 
+# Re-time the file if the encoded rate is off by more than this.
+RETIME_TOL = 0.05
+
+
 class Recorder(object):
     """Encodes at the rate the camera actually delivers, not the rate it was
     asked for. Gazebo drops sensor frames whenever rendering falls behind, so
     hard-coding 30 fps produces a video that plays fast -- a 115 s run came out
     as 71 s of footage. `probe` seconds of frames are timed first (and kept),
-    and that measured rate is what ffmpeg is told."""
+    and that measured rate is what ffmpeg is told.
+
+    The probe alone is not enough. It runs before the harvester has spawned the
+    fruit, so it times an empty scene; once ~1300 berry spheres are in the world
+    the camera settles at well under half the probed rate, and the file ends up
+    playing fast anyway. So close() re-measures over the whole recording and, if
+    the encode rate was off by more than RETIME_TOL, re-times the file in a
+    second pass. Frames per *simulated* second is the right quantity here: it is
+    what makes the video play at the speed the robot actually moved."""
 
     def __init__(self, out, fps, topic, probe=5.0):
         self.out = out
@@ -106,6 +118,35 @@ class Recorder(object):
         rospy.loginfo("wrote %d frames (%.1f s at %s fps), %.1f MB -> %s",
                       self.n, self.n / float(self.fps), self.fps,
                       sz / 1e6, self.out)
+        self.retime()
+
+    def retime(self):
+        """Fix the playback rate if the probe over-estimated it."""
+        elapsed = rospy.Time.now().to_sec() - self.t0
+        if elapsed <= 0 or self.n < 30:
+            return
+        true_fps = self.n / elapsed
+        err = abs(true_fps - self.fps) / float(self.fps)
+        rospy.loginfo("whole-run rate %.2f fps over %.1f s (encoded at %s)",
+                      true_fps, elapsed, self.fps)
+        if err <= RETIME_TOL:
+            return
+
+        tmp = self.out + ".retime.mp4"
+        factor = self.fps / true_fps
+        rospy.logwarn("encoded rate is %.0f%% off; re-timing by x%.3f so the "
+                      "video plays at the speed the robot moved",
+                      err * 100, factor)
+        cmd = ["ffmpeg", "-y", "-loglevel", "error", "-i", self.out,
+               "-vf", "setpts=PTS*%.6f" % factor, "-r", "25",
+               "-an", "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
+               "-pix_fmt", "yuv420p", "-movflags", "+faststart", tmp]
+        if subprocess.call(cmd) != 0 or not os.path.exists(tmp):
+            rospy.logerr("re-time pass failed; keeping the fast original")
+            return
+        os.replace(tmp, self.out)
+        rospy.loginfo("re-timed: %.1f s of video at %.2f fps -> %s",
+                      self.n / true_fps, true_fps, self.out)
 
 
 def main():

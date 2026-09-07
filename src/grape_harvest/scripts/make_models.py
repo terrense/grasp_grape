@@ -76,6 +76,8 @@ TUNNEL_RISE = 2.80          # arch rise above the springing -> ridge at 5.00 m
 TUNNEL_HOOP_DY = 3.00       # hoop spacing along the rows
 TUNNEL_PIPE_R = 0.032       # 64 mm galvanised hoop tube
 TUNNEL_ARC_SEGS = 16
+FILM_SILL = 0.30            # film starts this far above the springing;
+                            # below it the sides are rolled up
 
 
 def _rng(tag):
@@ -449,12 +451,18 @@ def greenhouse():
             "\n      </collision>"
             % (j, px, mid_y, pz, span_y, j, px, mid_y, pz, span_y))
 
-    # the film: one thin slab per arc chord, running the full length
+    # The film: one thin slab per arc chord, running the full length. It starts
+    # above FILM_SILL, leaving the sides open -- that is how a tunnel is
+    # actually run through harvest (side film rolled up for ventilation), and
+    # it also means the observation camera can see the work rather than
+    # everything behind a sheet of grey polythene.
     film = []
     for k, (((ax, az), (bx, bz))) in enumerate(zip(pts[:-1], pts[1:])):
         dx, dz = bx - ax, bz - az
         L = math.hypot(dx, dz)
         if L < 1e-6:
+            continue
+        if (az + bz) / 2.0 < TUNNEL_LEG_H + FILM_SILL:
             continue
         pitch = math.atan2(dx, dz)
         film.append(
@@ -463,9 +471,9 @@ def greenhouse():
             "\n        <cast_shadows>false</cast_shadows>"
             "\n        <geometry><box><size>0.012 %.3f %.4f</size></box></geometry>"
             "\n        <material>"
-            "\n          <ambient>0.85 0.88 0.90 0.28</ambient>"
-            "\n          <diffuse>0.92 0.95 0.97 0.28</diffuse>"
-            "\n          <specular>0.30 0.30 0.30 8</specular>"
+            "\n          <ambient>0.82 0.86 0.88 0.55</ambient>"
+            "\n          <diffuse>0.90 0.94 0.96 0.55</diffuse>"
+            "\n          <specular>0.45 0.45 0.45 16</specular>"
             "\n        </material>"
             "\n      </visual>"
             % (k, (ax + bx) / 2.0, mid_y, (az + bz) / 2.0, pitch,
@@ -533,14 +541,17 @@ def terrain():
 def cam_pose():
     """Fixed observation camera, framed on the lane the demo actually works.
 
-    Stands off the -x side of row 0 looking across the lane, so the platform
-    tracks left-to-right through the frame for the whole traverse instead of
-    driving out of shot the way a corner-mounted camera let it.
+    Square on to row 0 and level with the middle of it, so the platform stays
+    in shot for the whole traverse. The camera has a 1.15 rad horizontal field
+    of view, i.e. 33 degrees either side of the axis; at this standoff the ends
+    of the row sit about 26 degrees out, which keeps them inside it. Cameras
+    placed off the corner of the block, as earlier versions were, lose the
+    robot behind the near rows as soon as it starts driving.
     """
     tx, ty = row_x(0), 0.0
-    cx, cy, cz = lane_x(0) - 6.20, -1.60, 3.10
+    cx, cy, cz = lane_x(0) - 7.20, 0.0, 3.40
     yaw = math.atan2(ty - cy, tx - cx)
-    pitch = math.atan2(cz - 1.40, math.hypot(tx - cx, ty - cy))
+    pitch = math.atan2(cz - 1.55, math.hypot(tx - cx, ty - cy))
     return (round(cx, 3), round(cy, 3), round(cz, 3),
             0.0, round(pitch, 3), round(yaw, 3))
 

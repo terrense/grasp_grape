@@ -35,7 +35,7 @@
          whatever the GUI camera happens to be doing. -->
     <model name="harvest_cam">
       <static>true</static>
-      <pose>-5.000 -1.600 3.100 0.000 0.232 0.225</pose>
+      <pose>-6.000 0.000 3.400 0.000 0.227 0.000</pose>
       <link name="link">
         <sensor name="cam" type="camera">
           <camera>
@@ -78,7 +78,7 @@
 
     <gui>
       <camera name="user_camera">
-        <pose>-5.000 -1.600 3.100 0.000 0.232 0.225</pose>
+        <pose>-6.000 0.000 3.400 0.000 0.227 0.000</pose>
       </camera>
     </gui>
 
