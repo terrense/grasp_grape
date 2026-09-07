@@ -147,4 +147,5 @@
     <disable_collisions link1="Link5" link2="laser_link" reason="Never"/>
     <disable_collisions link1="Link5" link2="tcp_link" reason="Never"/>
     <disable_collisions link1="Link5" link2="ee_camera_link" reason="Never"/>
+    <disable_collisions link1="Link5" link2="catch_basket" reason="Never"/>
 </robot>

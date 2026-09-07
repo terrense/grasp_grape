@@ -8,7 +8,7 @@ The cut cycle itself:
 
     approach standoff -> slide the basket over the bunch -> fire the laser
     -> cut (stem joint released, cluster handed to the head) -> retreat
-    -> carry to its slot in the deck crate -> tip the basket out
+    -> carry to its slot in the deck crate -> release
 
 Severing is modelled in two halves. A Gazebo ray sensor on the head reports
 what the beam is hitting and how far off it is, and the cut only happens if
@@ -68,6 +68,7 @@ from moveit_msgs.srv import (GetPositionIK, GetPositionIKRequest,
 
 from std_srvs.srv import Empty
 from gazebo_msgs.msg import ModelStates
+from nav_msgs.msg import Odometry
 from gazebo_msgs.srv import SpawnModel
 from gazebo_ros_link_attacher.srv import Attach, AttachRequest
 from sensor_msgs.msg import LaserScan
@@ -100,16 +101,17 @@ LASER_RANGE = 0.35                 # effective cutting distance, metres
 LASER_DWELL = 1.5                  # seconds on target to sever a peduncle
 LASER_SETTLE = 0.4                 # let the arm stop ringing before firing
 
-# Where the bunch ends up once it is cut: standing on the floor of the catch
-# basket. The basket floor is 0.41 m along tool +X from the TCP (see the xacro),
-# and tool +X points down while cutting.
-BASKET_FLOOR_X = 0.40
+# Teleop mode: the arm only works while the platform is standing still. The
+# threshold is generous because ground truth twist is noisy on the clod track,
+# and because starting a cut while the base is still rolling is the one thing
+# that must not happen -- the beam would walk off the stem.
+STOPPED_SPEED = 0.03               # m/s below which the base counts as parked
+SETTLE_AFTER_STOP = 1.0            # s of standing still before the arm moves
 
-# Dumping attitude. tool_quat is Rz(az)*Ry(90+pitch); the basket runs along
-# tool +X and is open at -X (top) and +Z (front), so tipping it out means
-# rolling the wrist until +X points up. pitch = -160 deg puts the X column's
-# world z at +0.94, i.e. the basket is upside down over the crate.
-DUMP_PITCH = math.radians(-160.0)
+# The collar is open at the bottom, so a cut bunch keeps hanging where it was
+# rather than dropping onto a floor, and releasing it over the crate is just a
+# matter of undoing the attacher joint -- no wrist flip, which is one less
+# awkward posture for the planner to find.
 
 CRATE_T = 0.014                    # crate floor thickness, matches the xacro
 CRATE_FLOOR_Z = CRATE_BASE_XYZ[2] + CRATE_T
@@ -191,6 +193,9 @@ class GrapeHarvester(object):
 
         self.beam = None            # latest LaserScan from the cutting head
         rospy.Subscriber(LASER_TOPIC, LaserScan, self._beam_cb, queue_size=1)
+        self.twist = None           # base velocity, for the teleop mode
+        rospy.Subscriber("/ground_truth/state", Odometry, self._odom_cb,
+                         queue_size=1)
 
         self.planning_frame = self.arm.get_planning_frame()
 
@@ -219,6 +224,14 @@ class GrapeHarvester(object):
     def _beam_cb(self, msg):
         self.beam = msg
 
+    def _odom_cb(self, msg):
+        self.twist = msg.twist.twist
+
+    def base_speed(self):
+        if self.twist is None:
+            return 0.0
+        return math.hypot(self.twist.linear.x, self.twist.linear.y)
+
     def beam_range(self):
         """Closest thing the beam is touching, or None if it is pointing at
         nothing inside the sensor's range."""
@@ -228,7 +241,21 @@ class GrapeHarvester(object):
                 if self.beam.range_min < r < self.beam.range_max]
         return min(good) if good else None
 
-    def fire(self, name):
+    def tcp_error(self, target):
+        """How far the tool actually is from where it was told to go.
+
+        Worth measuring rather than assuming: the base is a floating joint on a
+        clod track, so a plan made in the world frame can be spoiled either by
+        joint tracking or by the platform settling under the arm, and the two
+        need different fixes.
+        """
+        m = self._mat(self.planning_frame, "tcp_link")
+        dx = m[0, 3] - target.position.x
+        dy = m[1, 3] - target.position.y
+        dz = m[2, 3] - target.position.z
+        return math.sqrt(dx * dx + dy * dy + dz * dz), (dx, dy, dz),             (m[0, 3], m[1, 3], m[2, 3])
+
+    def fire(self, name, target=None):
         """Hold the beam on the peduncle long enough to sever it.
 
         Returns True if the beam stayed on something inside LASER_RANGE for
@@ -238,9 +265,36 @@ class GrapeHarvester(object):
         real scene rather than against an assumed pose.
         """
         rospy.sleep(LASER_SETTLE)
+        if target is not None:
+            e, d3, act = self.tcp_error(target)
+            rospy.loginfo("  tcp is %.4f m from the commanded pose "
+                          "(d=[%+.3f %+.3f %+.3f], at [%.3f %.3f %.3f])",
+                          e, d3[0], d3[1], d3[2], act[0], act[1], act[2])
         d = self.beam_range()
         if d is None:
             rospy.logerr("  laser sees nothing in the beam; not firing")
+            if self.beam is not None:
+                rospy.logerr("  raw ranges: %s  (min=%.3f max=%.3f, %d rays)",
+                             ["%.3f" % r for r in self.beam.ranges],
+                             self.beam.range_min, self.beam.range_max,
+                             len(self.beam.ranges))
+            else:
+                rospy.logerr("  no LaserScan received at all on %s",
+                             LASER_TOPIC)
+            try:
+                m = self._mat("laser_link", self.planning_frame)
+                import numpy as _np
+                for nm in (name,):
+                    pm = self.model_pose(nm)
+                    if pm is None:
+                        continue
+                    v = m.dot([pm.position.x, pm.position.y,
+                               pm.position.z, 1.0])
+                    rospy.logerr("  %s origin in laser frame: "
+                                 "(%.3f, %.3f, %.3f)  -- beam runs along +z",
+                                 nm, v[0], v[1], v[2])
+            except Exception as e:
+                rospy.logwarn("  beam diagnostic TF failed: %s", e)
             return False
         if d > LASER_RANGE:
             rospy.logerr("  target at %.3f m is beyond the %.2f m effective "
@@ -331,11 +385,9 @@ class GrapeHarvester(object):
 
         rx, ry, rz = self.base_to_world(bx, by, bz)
         ox, oy, oz = self.base_to_world(bx, by, bz + 0.12)
-        # The release pose is flipped: with no jaws to open, the only way to let
-        # go is to turn the basket over. Approach the crate the normal way up,
-        # then invert for the drop.
-        return (pose_at(ox, oy, oz, az),
-                pose_at(rx, ry, rz, az, pitch=DUMP_PITCH))
+        # The collar is open at the bottom, so releasing is just detaching: the
+        # bunch drops straight out. Both poses keep the normal cutting attitude.
+        return pose_at(ox, oy, oz, az), pose_at(rx, ry, rz, az)
 
     def reachable(self, spec):
         """Straight-line distance from the arm base to the grasp point.
@@ -646,7 +698,7 @@ class GrapeHarvester(object):
             return False
 
         rospy.loginfo("--- laser cut ---")
-        if not self.fire(name):
+        if not self.fire(name, grasp):
             # nothing has been cut, so the cluster is still on the vine and
             # there is nothing to put down: a plain failure, not an abandon
             return False
@@ -680,11 +732,8 @@ class GrapeHarvester(object):
         #
         # The cross-section is oversized to absorb the PITCH-induced
         # misalignment -- collision padding, not a fruit model.
-        # once cut it is standing on the basket floor, not swinging from a
-        # stem, so clamp it to the floor rather than to where it hung
-        held.pose.position.x = min(spec["hang_below_tcp"]
-                                   - spec["body_len"] / 2.0,
-                                   BASKET_FLOOR_X - spec["body_len"] / 2.0)
+        held.pose.position.x = (spec["hang_below_tcp"]
+                                - spec["body_len"] / 2.0)
         held.pose.orientation.w = 1.0
         # Link2..Link6 are all in touch_links, and the cross-section padding is
         # small, because of how this arm has to stand to reach 1.4-1.7 m fruit:
@@ -736,7 +785,7 @@ class GrapeHarvester(object):
         self.scene.remove_world_object(name)
         r3 = self._att(self.detach, ROBOT_MODEL, ROBOT_EE_LINK, name,
                        BUNCH_LINK)
-        rospy.loginfo("  tipped out into the crate (ok=%s)", r3.ok)
+        rospy.loginfo("  released into the crate (ok=%s)", r3.ok)
         rospy.sleep(1.5)
         self.add_settled_cluster(spec)
 
@@ -891,6 +940,101 @@ class GrapeHarvester(object):
         self.report(specs, harvested, baseline if verify else None)
         return not failed
 
+    def run_teleop(self, specs, verify=False):
+        """Somebody else drives; the arm decides when there is work.
+
+        The split is deliberate: the base is the part a person has intuitions
+        about (how close to the vine, when to stop), and the arm is the part
+        that benefits from not being hand-flown. So the arm stays stowed
+        whenever the platform is rolling, and the moment it stops it looks for
+        anything in range and cuts it.
+
+        There is no row changing here and no steering: see teleop_base.py for
+        why the lane matters that much.
+        """
+        baseline = {}
+        if verify:
+            m = rospy.wait_for_message("/gazebo/model_states", ModelStates,
+                                       timeout=20)
+            for n, p in zip(m.name, m.pose):
+                baseline[n] = (p.position.x, p.position.y, p.position.z)
+
+        remaining = set(x["name"] for x in specs)
+        harvested, failed = [], []
+        rospy.loginfo("=" * 62)
+        rospy.loginfo("TELEOP: drive with teleop_base.py; the arm cuts whatever")
+        rospy.loginfo("comes within %.2f m while the platform is stopped.",
+                      REACH)
+        rospy.loginfo("=" * 62)
+        self.go_named("stow")
+
+        stowed = True
+        parked_since = None
+        idle_note = rospy.Time.now()
+        rate = rospy.Rate(4)
+
+        while not rospy.is_shutdown():
+            if self.slots_used >= len(CRATE_SLOTS):
+                rospy.logwarn_throttle(
+                    20.0, "crate full (%d slots): drive on, but nothing more "
+                    "can be cut", len(CRATE_SLOTS))
+                rate.sleep()
+                continue
+
+            if self.base_speed() > STOPPED_SPEED:
+                parked_since = None
+                if not stowed:
+                    rospy.loginfo("platform moving: stowing the arm")
+                    self.set_speed(0.35)
+                    self.go_named("stow")
+                    stowed = True
+                rate.sleep()
+                continue
+
+            if parked_since is None:
+                parked_since = rospy.Time.now()
+            if (rospy.Time.now() - parked_since).to_sec() < SETTLE_AFTER_STOP:
+                rate.sleep()
+                continue
+
+            here = []
+            for spec in specs:
+                if spec["name"] not in remaining:
+                    continue
+                ok, d = self.reachable(spec)
+                if ok:
+                    here.append((d, spec))
+            if not here:
+                if (rospy.Time.now() - idle_note).to_sec() > 15.0:
+                    rospy.loginfo("parked, nothing in reach: drive on")
+                    idle_note = rospy.Time.now()
+                rate.sleep()
+                continue
+
+            here.sort(key=lambda t: t[0])
+            d, spec = here[0]
+            rospy.loginfo("-" * 62)
+            rospy.loginfo("in range: %s at %.2f m", spec["name"], d)
+            remaining.discard(spec["name"])
+            stowed = False
+            if self.harvest(spec, self.slots_used):
+                harvested.append(spec["name"])
+                self.slots_used += 1
+                rospy.loginfo("cut %d so far; %d crate slots left",
+                              len(harvested),
+                              len(CRATE_SLOTS) - self.slots_used)
+            else:
+                failed.append(spec["name"])
+                rospy.logerr("!!! %s not cut", spec["name"])
+            self.set_speed(0.35)
+            self.go_named("stow")
+            stowed = True
+            self.report(specs, harvested, baseline if verify else None)
+
+        rospy.loginfo("teleop session over: %d cut, %d failed",
+                      len(harvested), len(failed))
+        return not failed
+
     def report(self, specs, harvested, baseline):
         m = rospy.wait_for_message("/gazebo/model_states", ModelStates,
                                    timeout=20)
@@ -943,6 +1087,9 @@ def main():
     ap.add_argument("--no-drive", action="store_true",
                     help="harvest only what is reachable from the current "
                          "standpoint; do not command the base")
+    ap.add_argument("--teleop", action="store_true",
+                    help="a human drives the base; the arm cuts whatever comes "
+                         "within reach whenever the platform is stopped")
     ap.add_argument("--row", type=int, default=0,
                     help="which trellis row to work (0..%d)" % (N_ROWS - 1))
     ap.add_argument("--verify", action="store_true",
@@ -964,6 +1111,12 @@ def main():
     if not args.no_spawn:
         h.spawn_bunches(specs)
     h.build_planning_scene(specs)
+
+    if args.teleop:
+        ok = h.run_teleop(specs, verify=args.verify)
+        rospy.loginfo("result: %s", "SUCCESS" if ok else "FAILED")
+        moveit_commander.roscpp_shutdown()
+        sys.exit(0 if ok else 1)
 
     driver = None
     if not args.no_drive:

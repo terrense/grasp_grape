@@ -20,12 +20,28 @@ arm_controller:
     # from the commanded path (PATH_TOLERANCE_VIOLATED on joint4). Path
     # tracking is not a meaningful signal for a kinematically driven joint;
     # the goal tolerance below still guards the endpoint.
-    # goal tolerance widened from 0.05 to 0.12 rad: once the cut cluster is
-    # rigidly joined to the flange it biases the SetPosition-driven joints by
-    # ~0.07 rad (GOAL_TOLERANCE_VIOLATED on joint3). The fruit is held by the
-    # attacher joint, not by tracking accuracy, so this costs nothing here --
-    # but it does mean joint tracking is NOT a valid accuracy metric in this
-    # sim. See README "known limitations".
+    # NOTE: 0.12 rad here is known to be too loose for the laser (its spot is
+    # ~4 mm and 0.12 rad over a 1.2 m CR10 is ~0.14 m of tool error), but
+    # tightening it to 0.01 alone made things worse, not better: the measured
+    # tool error at fire time went from 0.54 m to 1.03 m and the arm stopped
+    # leaving the stow posture altogether, while execute() still returned
+    # success. So the real fault is upstream of the tolerance -- trajectories
+    # are reporting success without moving the arm -- and tightening this only
+    # changes how far off it ends up. Left at 0.12 until that is found.
+    #
+    # Original reasoning for widening it to 0.12 for the shear cutter:
+    # shear cutter, because a rigidly attached cluster biases the
+    # SetPosition-driven joints by ~0.07 rad and the jaws had 96 mm of opening
+    # to absorb it. The laser does not: its spot is about 4 mm, and 0.12 rad
+    # over a 1.2 m CR10 is ~0.14 m of tool error, so a "successful" move could
+    # leave the beam pointing at nothing. Measured on the first laser run: the
+    # tool finished 0.54 m from the commanded pose and the controller still
+    # reported success.
+    #
+    # The cut happens BEFORE anything is attached, so the arm is unloaded
+    # exactly when accuracy matters. If the post-cut carry starts failing on
+    # tolerance, that is the load bias reappearing and it needs handling there,
+    # not by blinding the approach.
     joint1: {trajectory: 0.0, goal: 0.12}
     joint2: {trajectory: 0.0, goal: 0.12}
     joint3: {trajectory: 0.0, goal: 0.12}

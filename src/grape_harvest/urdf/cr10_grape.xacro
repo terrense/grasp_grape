@@ -485,11 +485,21 @@
     <parent link="ee_camera_link"/><child link="ee_camera_optical_frame"/>
   </joint>
 
-  <!-- Catch basket. Open at the top (-X) and at the front (+Z) so the tool can
-       be slid over a hanging bunch; the bunch is then standing in the basket
-       before the beam is fired. Released over the crate by pitching the wrist
-       forward so it slides out of the open front. -->
-  <xacro:macro name="basket_slab" params="x y z sx sy sz">
+  <!-- Catch collar. Three walls that surround the cluster and steady it while
+       the beam works, open at the front (+Z) so the tool slides over a hanging
+       bunch and open at the bottom so it never pushes the fruit.
+
+       It is deliberately NOT a closed basket. The longest bunch hangs 0.47 m
+       below the cut, so a basket with a floor under it would reach further down
+       than the forearm can tolerate: an earlier 0.41 m version made
+       collision-free IK fail at the grasp pose outright, and the contacts it
+       did produce threw the platform sideways, because SetPosition-driven
+       joints make any contact effectively rigid.
+
+       What actually retains the cut bunch is the attacher joint, established
+       before the cordon joint is released. A laser cannot hold anything, so
+       something has to; the collar is the mechanical account of it. -->
+  <xacro:macro name="collar_slab" params="x y z sx sy sz">
     <visual>
       <origin xyz="${x} ${y} ${z}"/>
       <geometry><box size="${sx} ${sy} ${sz}"/></geometry>
@@ -503,14 +513,13 @@
 
   <link name="catch_basket">
     <inertial>
-      <origin xyz="0.28 0 0.09"/>
-      <mass value="0.60"/>
-      <inertia ixx="6E-03" ixy="0" ixz="0" iyy="6E-03" iyz="0" izz="6E-03"/>
+      <origin xyz="0.15 0 0.09"/>
+      <mass value="0.35"/>
+      <inertia ixx="2E-03" ixy="0" ixz="0" iyy="2E-03" iyz="0" izz="2E-03"/>
     </inertial>
-    <xacro:basket_slab x="0.410" y="0"      z="0.090" sx="0.020" sy="0.240" sz="0.240"/>
-    <xacro:basket_slab x="0.275" y="0"      z="-0.030" sx="0.270" sy="0.240" sz="0.020"/>
-    <xacro:basket_slab x="0.275" y="0.120"  z="0.090" sx="0.270" sy="0.020" sz="0.240"/>
-    <xacro:basket_slab x="0.275" y="-0.120" z="0.090" sx="0.270" sy="0.020" sz="0.240"/>
+    <xacro:collar_slab x="0.150" y="0.100"  z="0.090" sx="0.180" sy="0.016" sz="0.200"/>
+    <xacro:collar_slab x="0.150" y="-0.100" z="0.090" sx="0.180" sy="0.016" sz="0.200"/>
+    <xacro:collar_slab x="0.150" y="0"      z="-0.002" sx="0.180" sy="0.216" sz="0.016"/>
   </link>
   <joint name="basket_joint" type="fixed">
     <origin xyz="0 0 0"/>
@@ -724,7 +733,7 @@
           </horizontal>
         </scan>
         <range>
-          <min>0.02</min>
+          <min>0.004</min>
           <max>0.60</max>
           <resolution>0.002</resolution>
         </range>

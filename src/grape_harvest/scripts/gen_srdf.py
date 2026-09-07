@@ -70,12 +70,13 @@ for link, others in NEAR_MOUNT.items():
 rows += ARM_ADJACENT
 
 # The head hangs off Link6, so it is adjacent to it and close to Link5. The
-# basket is left OUT of the Link4/Link5 exemptions on purpose: it sticks 0.4 m
-# below the tool, it genuinely can be folded back into the forearm, and that is
-# a collision the planner should refuse rather than one to wave through.
+# collar is now shallow enough to sit in the wrist's own envelope, so it is
+# exempted alongside the rest of the head -- checking it against Link5 only
+# produced refusals at poses the real thing clears easily. Link4 and below stay
+# checked: if the collar reaches the forearm, the plan is wrong.
 for h in HEAD:
     rows.append(("Link6", h, "Adjacent"))
-for h in ("ee_base", "laser_link", "tcp_link", "ee_camera_link"):
+for h in HEAD:
     rows.append(("Link5", h, "Never"))
 
 body = "\n".join(

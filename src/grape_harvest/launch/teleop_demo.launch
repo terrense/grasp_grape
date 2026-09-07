@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<!-- One command: Gazebo, RViz, a throttle for the platform, and the arm
+     working on its own.
+
+     The division of labour is the point. Steering and stopping are the parts a
+     person has intuitions about, so they are on a key; deciding when a bunch is
+     reachable and how to get the head onto its stem is not, so that is
+     automatic. Row changing is out of scope here, and so is steering: the arm
+     works from a lane 0.80 m off the row and spends its whole reach budget on
+     that standoff, so a hand-steered platform would mostly put fruit out of
+     range. Drive along the row, stop next to a bunch, watch it get cut.
+
+       roslaunch grape_harvest teleop_demo.launch
+
+     gui:=false        headless Gazebo (much faster; RViz still shows the arm)
+     rviz:=false       no RViz
+     steering:=true    rqt sliders instead of the keyboard, if xterm is awkward
+     verify:=true      also report anything the arm moved that it should not
+-->
+<launch>
+
+  <arg name="gui"      default="true"/>
+  <arg name="rviz"     default="true"/>
+  <arg name="steering" default="false"/>
+  <arg name="verify"   default="false"/>
+
+  <include file="$(find grape_harvest)/launch/vineyard_gazebo.launch">
+    <arg name="gui" value="$(arg gui)"/>
+  </include>
+
+  <include file="$(find grape_harvest)/launch/moveit.launch">
+    <arg name="rviz" value="$(arg rviz)"/>
+  </include>
+
+  <!-- The throttle gets a terminal of its own: a node started by roslaunch
+       shares the launching console's stdout but not its stdin, so a keyboard
+       reader run as a plain node never sees a keypress. -->
+  <node unless="$(arg steering)" name="teleop_base" pkg="grape_harvest"
+        type="teleop_base.py" output="screen"
+        launch-prefix="xterm -title platform_throttle -geometry 66x20 -e"/>
+
+  <node if="$(arg steering)" name="rqt_steering" pkg="rqt_robot_steering"
+        type="rqt_robot_steering"/>
+
+  <!-- The arm. Waits for Gazebo, MoveIt and the controllers to be up, spawns
+       the fruit, then sits stowed until the platform stops next to something. -->
+  <node name="grape_harvester" pkg="grape_harvest" type="pick_grape.py"
+        output="screen" required="false"
+        args="$(eval '--teleop --verify' if arg('verify') else '--teleop')"
+        launch-prefix="bash -c 'sleep 22; $0 $@'"/>
+
+</launch>
