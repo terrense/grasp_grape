@@ -1,9 +1,13 @@
 <?xml version="1.0" ?>
-<robot name="cr5_robot">
-    <!-- The arm chain starts at the CR5 mounting flange on top of the column,
+<robot name="cr10_robot">
+    <!-- The arm chain starts at the CR10 mounting flange on top of the column,
          not at the chassis, and ends at the cutter TCP rather than the bare
-         Link6 flange. -->
-    <group name="cr5_arm">
+         Link6 flange.
+
+         The group is called `arm`, not `cr10_arm`: the name is baked into six
+         config files and five scripts, and one that encodes the model has to
+         be chased through all of them the next time the model changes. -->
+    <group name="arm">
         <chain base_link="arm_base_link" tip_link="tcp_link"/>
     </group>
     <group name="gripper">
@@ -11,9 +15,9 @@
         <joint name="right_blade_joint"/>
     </group>
     <end_effector name="cutter" parent_link="tcp_link" group="gripper"
-                  parent_group="cr5_arm"/>
+                  parent_group="arm"/>
 
-    <group_state name="home" group="cr5_arm">
+    <group_state name="home" group="arm">
         <joint name="joint1" value="0"/>
         <joint name="joint2" value="0"/>
         <joint name="joint3" value="0"/>
@@ -22,7 +26,7 @@
         <joint name="joint6" value="0"/>
     </group_state>
     <!-- elbow-up posture facing the vine, cutter roughly horizontal -->
-    <group_state name="scan" group="cr5_arm">
+    <group_state name="scan" group="arm">
         <joint name="joint1" value="0"/>
         <joint name="joint2" value="-0.7"/>
         <joint name="joint3" value="1.4"/>
@@ -30,16 +34,17 @@
         <joint name="joint5" value="-1.5708"/>
         <joint name="joint6" value="0"/>
     </group_state>
-    <!-- STOW: folded upright over the deck for driving between rows.
-         Values come from scripts/stow_check.py, which measures the actual
-         link envelope rather than guessing. -->
-    <group_state name="stow" group="cr5_arm">
-        <joint name="joint1" value="0"/>
-        <joint name="joint2" value="-1.20"/>
-        <joint name="joint3" value="2.40"/>
-        <joint name="joint4" value="-1.20"/>
+    <!-- STOW: folded over the deck for driving between rows. Values come from
+         scripts/stow_check.py, which measures the actual link envelope rather
+         than guessing, and has to be re-run whenever the arm changes -- the
+         CR10's links are 40% longer than the CR5's. -->
+    <group_state name="stow" group="arm">
+        <joint name="joint1" value="0.0000"/>
+        <joint name="joint2" value="-0.9000"/>
+        <joint name="joint3" value="2.4000"/>
+        <joint name="joint4" value="-3.0708"/>
         <joint name="joint5" value="-1.5708"/>
-        <joint name="joint6" value="0"/>
+        <joint name="joint6" value="0.0000"/>
     </group_state>
     <group_state name="open" group="gripper">
         <joint name="left_blade_joint" value="0.042"/>

@@ -7,7 +7,7 @@ a planner: drive along +/-y at a fixed x, holding heading. Feedback comes from
 slips too much on the clod track to place the arm afterwards.
 
 Run standalone for the clearance test:
-    rosrun grape_harvest drive.py _aisle:=0 _stow_first:=true
+    rosrun grape_harvest drive.py _row:=0 _stow_first:=true
 """
 import math
 import os
@@ -18,7 +18,7 @@ from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from make_models import aisle_x, ROW_LEN, row_x, N_ROWS
+from make_models import lane_x, ROW_LEN, row_x, N_ROWS, LANE_STANDOFF
 
 
 def wrap(a):
@@ -114,14 +114,18 @@ class BaseDriver(object):
 
 def main():
     rospy.init_node("base_driver")
-    k = rospy.get_param("~aisle", 0)
+    k = rospy.get_param("~row", rospy.get_param("~aisle", 0))
     stow_first = rospy.get_param("~stow_first", True)
-    lane = aisle_x(k)
+    # the lane the platform works row k from: LANE_STANDOFF off the row, not
+    # the middle of the aisle. Row spacing is uneven (2.2-3.0 m), so an aisle
+    # centre is not a fixed distance from the vine and the arm cannot reach
+    # the fruit from there.
+    lane = lane_x(k)
 
     if stow_first:
         import moveit_commander
         moveit_commander.roscpp_initialize([])
-        arm = moveit_commander.MoveGroupCommander("cr5_arm")
+        arm = moveit_commander.MoveGroupCommander("arm")
         arm.set_max_velocity_scaling_factor(0.4)
         rospy.loginfo("stowing the arm before driving")
         arm.set_named_target("stow")
@@ -138,7 +142,8 @@ def main():
     # reverse and rotate at the same time
     d.face_heading(-math.pi / 2)
     d.drive_to_y(-ROW_LEN / 2 - 1.5, lane, heading=-math.pi / 2)
-    rospy.loginfo("aisle %d pass complete (lane x=%.2f)", k, lane)
+    rospy.loginfo("row %d pass complete (lane x=%.2f, standoff %.2f m)",
+                  k, lane, LANE_STANDOFF)
 
 
 if __name__ == "__main__":

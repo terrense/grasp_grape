@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
-<!-- Vineyard harvesting robot: skid-steer field platform + Dobot CR5 + a
+<!-- Vineyard harvesting robot: skid-steer field platform + Dobot CR10 + a
      shear-type cutter, plus the sensors a VINS-Mono style estimator needs.
 
-     Arm kinematics/inertials come from dobot_gazebo/urdf/cr5_robot.xacro
+     Arm kinematics/inertials come from dobot_description/urdf/cr10_robot.urdf
      (Dobot-Arm/TCP-IP-ROS-6AXis). Differences from the vendor file:
        * <kinematic>true</kinematic> removed  -> links are real dynamic bodies
        * libgazebo_ros_joint_pose_trajectory replaced by gazebo_ros_control
@@ -13,13 +13,19 @@
      Frames:
        base_footprint  ground contact point, what odometry reports
        base_link       chassis centre
-       arm_base_link   CR5 base flange, 0.75 m above the ground
-     The arm base is deliberately kept at 0.75 m, the same height the fixed
-     pedestal put it at, so the reach geometry against a 1.22 m fruiting wire
-     is unchanged. -->
-<robot name="cr5_robot" xmlns:xacro="http://ros.org/wiki/xacro">
+       arm_base_link   CR10 base flange, 0.75 m above the ground
 
-  <xacro:property name="mesh" value="package://dobot_description/meshes/cr5"/>
+     Why a CR10 and not the CR5 this started with: the block is planted with
+     the fruit at 1.40-1.70 m and the rows 2.2-3.0 m apart. Even hugging a row
+     at 0.80 m the straight-line distance to the highest fruit is 1.23 m, well
+     past the CR5's 0.9 m. The CR10 reaches 1.3 m, which closes the geometry
+     without raising the column and lifting the centre of gravity. Its joint
+     limits are clamped to +/-pi here for the same reason the CR5's were: the
+     vendor's +/-6.28 makes the 6-D search space about 4000x larger and
+     RRTConnect times out. -->
+<robot name="cr10_robot" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:property name="mesh" value="package://dobot_description/meshes/cr10"/>
 
   <!-- ===================== platform geometry ===================== -->
   <xacro:property name="wheel_r"    value="0.160"/>   <!-- 320 mm lug tyre -->
@@ -267,127 +273,127 @@
 
   <link name="arm_base_link">
     <inertial>
-      <origin xyz="-8.0961E-06 0.0019103 0.028995" rpy="0 0 0"/>
-      <mass value="0.90882"/>
-      <inertia ixx="0.0014545" ixy="4.2968E-08" ixz="-1.8199E-07"
-               iyy="0.001345"  iyz="-6.243E-06" izz="0.002155"/>
+      <origin xyz="-0.0017435 -4.7141E-06 0.032774" rpy="0 0 0"/>
+      <mass value="1.8265"/>
+      <inertia ixx="0.0041731" ixy="5.9354E-07" ixz="2.52E-05"
+               iyy="0.0043128"  iyz="-5.4503E-07" izz="0.0067702"/>
     </inertial>
-    <visual><geometry><mesh filename="${mesh}/base_link.dae"/></geometry><material name="dobot_dark"/></visual>
-    <collision><geometry><mesh filename="${mesh}/base_link.dae"/></geometry></collision>
+    <visual><geometry><mesh filename="${mesh}/base_link.STL"/></geometry><material name="dobot_dark"/></visual>
+    <collision><geometry><mesh filename="${mesh}/base_link.STL"/></geometry></collision>
   </link>
   <joint name="arm_mount_joint" type="fixed">
     <origin xyz="0 0 ${arm_base_z - deck_z}"/>
     <parent link="arm_column"/><child link="arm_base_link"/>
   </joint>
 
-  <!-- ===================== CR5 arm ===================== -->
-  <link name="Link1">
-    <inertial>
-      <origin xyz="-8.7268E-07 -0.0032576 -0.0076748"/>
-      <mass value="1.6123"/>
-      <inertia ixx="0.0029122" ixy="5.7387E-09" ixz="1.9945E-08"
-               iyy="0.0028191" iyz="0.00044094" izz="0.0032836"/>
-    </inertial>
-    <visual><geometry><mesh filename="${mesh}/Link1.dae"/></geometry><material name="dobot_white"/></visual>
-    <collision><geometry><mesh filename="${mesh}/Link1.dae"/></geometry></collision>
-  </link>
   <joint name="joint1" type="revolute">
-    <origin xyz="0 0 0.147" rpy="0 0 0"/>
+    <origin xyz="0 0 0.1765" rpy="0 0 0"/>
     <parent link="arm_base_link"/><child link="Link1"/>
     <axis xyz="0 0 1"/>
-    <limit lower="-3.1416" upper="3.1416" effort="300" velocity="3.14"/>
-    <dynamics damping="2.0" friction="1.0"/>
+    <limit lower="-3.1416" upper="3.1416" effort="500" velocity="3.14"/>
+    <dynamics damping="1.0" friction="0.5"/>
   </joint>
 
-  <link name="Link2">
+  <link name="Link1">
     <inertial>
-      <origin xyz="-0.21351 -1.3842E-06 0.14252"/>
-      <mass value="5.5186"/>
-      <inertia ixx="0.0085919" ixy="7.5552E-07" ixz="-7.8922E-07"
-               iyy="0.027553"  iyz="1.4629E-07" izz="0.028294"/>
+      <origin xyz="-1.6635E-06 -0.010819 0.0028389" rpy="0 0 0"/>
+      <mass value="4.1649"/>
+      <inertia ixx="0.020714" ixy="-1.9343E-07" ixz="1.6036E-07"
+               iyy="0.018824"  iyz="-9.6731E-05" izz="0.014575"/>
     </inertial>
-    <visual><geometry><mesh filename="${mesh}/Link2.dae"/></geometry><material name="dobot_white"/></visual>
-    <collision><geometry><mesh filename="${mesh}/Link2.dae"/></geometry></collision>
+    <visual><geometry><mesh filename="${mesh}/Link1.STL"/></geometry><material name="dobot_white"/></visual>
+    <collision><geometry><mesh filename="${mesh}/Link1.STL"/></geometry></collision>
   </link>
   <joint name="joint2" type="revolute">
     <origin xyz="0 0 0" rpy="1.5708 1.5708 0"/>
     <parent link="Link1"/><child link="Link2"/>
     <axis xyz="0 0 1"/>
-    <limit lower="-3.1416" upper="3.1416" effort="300" velocity="3.14"/>
-    <dynamics damping="2.0" friction="1.0"/>
+    <limit lower="-3.1416" upper="3.1416" effort="500" velocity="3.14"/>
+    <dynamics damping="1.0" friction="0.5"/>
+  </joint>
+
+  <link name="Link2">
+    <inertial>
+      <origin xyz="-0.24631 3.5816E-07 0.19515" rpy="0 0 0"/>
+      <mass value="11.314"/>
+      <inertia ixx="0.033616" ixy="-8.2998E-07" ixz="-0.0033352"
+               iyy="0.30683"  iyz="-6.6457E-08" izz="0.29972"/>
+    </inertial>
+    <visual><geometry><mesh filename="${mesh}/Link2.STL"/></geometry><material name="dobot_white"/></visual>
+    <collision><geometry><mesh filename="${mesh}/Link2.STL"/></geometry></collision>
+  </link>
+  <joint name="joint3" type="revolute">
+    <origin xyz="-0.607 0 0" rpy="0 0 0"/>
+    <parent link="Link2"/><child link="Link3"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-2.793" upper="2.793" effort="500" velocity="3.14"/>
+    <dynamics damping="1.0" friction="0.5"/>
   </joint>
 
   <link name="Link3">
     <inertial>
-      <origin xyz="-0.15231 -1.4079E-07 0.022693"/>
-      <mass value="2.8536"/>
-      <inertia ixx="0.0032608" ixy="-3.2147E-10" ixz="0.00012363"
-               iyy="0.0092967" iyz="2.9478E-10"  izz="0.0095552"/>
+      <origin xyz="-0.2708559 2.5144691E-07 0.0622960" rpy="0 0 0"/>
+      <mass value="4.8919119"/>
+      <inertia ixx="0.0071572" ixy="-5.6201741E-07" ixz="-0.0025774807"
+               iyy="0.2396734"  iyz="9.2622830E-08" izz="0.2383692"/>
     </inertial>
-    <visual><geometry><mesh filename="${mesh}/Link3.dae"/></geometry><material name="dobot_white"/></visual>
-    <collision><geometry><mesh filename="${mesh}/Link3.dae"/></geometry></collision>
+    <visual><geometry><mesh filename="${mesh}/Link3.STL"/></geometry><material name="dobot_white"/></visual>
+    <collision><geometry><mesh filename="${mesh}/Link3.STL"/></geometry></collision>
   </link>
-  <joint name="joint3" type="revolute">
-    <origin xyz="-0.427 0 0"/>
-    <parent link="Link2"/><child link="Link3"/>
+  <joint name="joint4" type="revolute">
+    <origin xyz="-0.568 0 0.191" rpy="0 0 -1.5708"/>
+    <parent link="Link3"/><child link="Link4"/>
     <axis xyz="0 0 1"/>
-    <limit lower="-2.79" upper="2.79" effort="300" velocity="3.14"/>
-    <dynamics damping="2.0" friction="1.0"/>
+    <limit lower="-3.1416" upper="3.1416" effort="500" velocity="3.14"/>
+    <dynamics damping="1.0" friction="0.5"/>
   </joint>
 
   <link name="Link4">
     <inertial>
-      <origin xyz="-3.2386E-07 -0.002077 -0.0015548"/>
-      <mass value="0.67058"/>
-      <inertia ixx="0.00066939" ixy="4.1975E-10" ixz="-1.0734E-08"
-               iyy="0.00065424" iyz="0.00011081" izz="0.00065365"/>
+      <origin xyz="-2.5313749E-07 0.0079872450 -0.0058907423" rpy="0 0 0"/>
+      <mass value="1.1688429"/>
+      <inertia ixx="0.0029261493" ixy="8.2044008E-09" ixz="-8.1999042E-09"
+               iyy="0.0015005300"  iyz="-5.4492522E-05" izz="0.0027327494"/>
     </inertial>
-    <visual><geometry><mesh filename="${mesh}/Link4.dae"/></geometry><material name="dobot_white"/></visual>
-    <collision><geometry><mesh filename="${mesh}/Link4.dae"/></geometry></collision>
+    <visual><geometry><mesh filename="${mesh}/Link4.STL"/></geometry><material name="dobot_white"/></visual>
+    <collision><geometry><mesh filename="${mesh}/Link4.STL"/></geometry></collision>
   </link>
-  <joint name="joint4" type="revolute">
-    <origin xyz="-0.357 0 0.141" rpy="0 0 -1.5708"/>
-    <parent link="Link3"/><child link="Link4"/>
+  <joint name="joint5" type="revolute">
+    <origin xyz="0 -0.125 0" rpy="1.5708 0 0"/>
+    <parent link="Link4"/><child link="Link5"/>
     <axis xyz="0 0 1"/>
-    <limit lower="-3.1416" upper="3.1416" effort="300" velocity="3.14"/>
+    <limit lower="-3.1416" upper="3.1416" effort="500" velocity="3.14"/>
     <dynamics damping="1.0" friction="0.5"/>
   </joint>
 
   <link name="Link5">
     <inertial>
-      <origin xyz="-3.7738E-07 -0.0045777 -0.0012971"/>
-      <mass value="0.7269"/>
-      <inertia ixx="0.00073069" ixy="-5.7806E-09" ixz="6.7132E-09"
-               iyy="0.00071195" iyz="-0.00011926" izz="0.00071391"/>
+      <origin xyz="5.5069946E-07 -0.0145467578 -0.0045488709" rpy="0 0 0"/>
+      <mass value="1.2230308"/>
+      <inertia ixx="0.0033790546" ixy="3.5781990E-08" ixz="-7.5182806E-09"
+               iyy="0.0014925557"  iyz="8.4191792E-05" izz="0.0032330031"/>
     </inertial>
-    <visual><geometry><mesh filename="${mesh}/Link5.dae"/></geometry><material name="dobot_white"/></visual>
-    <collision><geometry><mesh filename="${mesh}/Link5.dae"/></geometry></collision>
+    <visual><geometry><mesh filename="${mesh}/Link5.STL"/></geometry><material name="dobot_white"/></visual>
+    <collision><geometry><mesh filename="${mesh}/Link5.STL"/></geometry></collision>
   </link>
-  <joint name="joint5" type="revolute">
-    <origin xyz="0 -0.116 0" rpy="1.5708 0 0"/>
-    <parent link="Link4"/><child link="Link5"/>
+  <joint name="joint6" type="revolute">
+    <origin xyz="0 0.1084 0" rpy="-1.5708 0 0"/>
+    <parent link="Link5"/><child link="Link6"/>
     <axis xyz="0 0 1"/>
-    <limit lower="-3.1416" upper="3.1416" effort="300" velocity="3.14"/>
+    <limit lower="-3.1416" upper="3.1416" effort="500" velocity="3.14"/>
     <dynamics damping="1.0" friction="0.5"/>
   </joint>
 
   <link name="Link6">
     <inertial>
-      <origin xyz="5.0777E-11 9.3774E-05 -0.019285"/>
-      <mass value="0.15789"/>
-      <inertia ixx="7.8045E-05" ixy="6.1582E-15" ixz="6.2471E-14"
-               iyy="7.9168E-05" iyz="-1.3822E-07" izz="0.00012951"/>
+      <origin xyz="1.4298747E-10 2.2964069E-05 -0.0205297780" rpy="0 0 0"/>
+      <mass value="0.2054395"/>
+      <inertia ixx="0.00011011543" ixy="-8.2148788E-14" ixz="4.2861584E-14"
+               iyy="0.00011066247"  iyz="3.6887993E-08" izz="0.00020518430"/>
     </inertial>
-    <visual><geometry><mesh filename="${mesh}/Link6.dae"/></geometry><material name="dobot_white"/></visual>
-    <collision><geometry><mesh filename="${mesh}/Link6.dae"/></geometry></collision>
+    <visual><geometry><mesh filename="${mesh}/Link6.STL"/></geometry><material name="dobot_white"/></visual>
+    <collision><geometry><mesh filename="${mesh}/Link6.STL"/></geometry></collision>
   </link>
-  <joint name="joint6" type="revolute">
-    <origin xyz="0 0.105 0" rpy="-1.5708 0 0"/>
-    <parent link="Link5"/><child link="Link6"/>
-    <axis xyz="0 0 1"/>
-    <limit lower="-3.1416" upper="3.1416" effort="300" velocity="3.14"/>
-    <dynamics damping="1.0" friction="0.5"/>
-  </joint>
 
   <!-- ============ shear-type two-finger end effector ============
        The two blades close on the peduncle (fruit stem), clamp it, and cut.

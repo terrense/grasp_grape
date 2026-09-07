@@ -18,7 +18,7 @@ import pick_grape as pg
 rospy.init_node("diag2", anonymous=True)
 moveit_commander.roscpp_initialize(sys.argv)
 robot = moveit_commander.RobotCommander()
-arm = moveit_commander.MoveGroupCommander("cr5_arm")
+arm = moveit_commander.MoveGroupCommander("arm")
 
 rospy.wait_for_service("/compute_ik", timeout=30)
 rospy.wait_for_service("/check_state_validity", timeout=30)
@@ -34,7 +34,7 @@ pg.GrapeHarvester.build_planning_scene(h)
 def report(label, state):
     req = GetStateValidityRequest()
     req.robot_state = state
-    req.group_name = "cr5_arm"
+    req.group_name = "arm"
     res = validity(req)
     if res.valid:
         print("  %-12s VALID" % label)
@@ -71,7 +71,7 @@ keys = [
 
 for name, p in keys:
     req = GetPositionIKRequest()
-    req.ik_request.group_name = "cr5_arm"
+    req.ik_request.group_name = "arm"
     req.ik_request.ik_link_name = "tcp_link"
     req.ik_request.robot_state = cur
     req.ik_request.avoid_collisions = True

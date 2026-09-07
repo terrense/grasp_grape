@@ -22,14 +22,23 @@ from moveit_msgs.srv import (GetPositionFK, GetPositionFKRequest,
 from moveit_msgs.msg import RobotState
 from sensor_msgs.msg import JointState
 
-LINK_R = 0.09          # generous allowance for CR5 link cross-section
+LINK_R = 0.09          # generous allowance for CR10 link cross-section
 ARM_LINKS = ["Link1", "Link2", "Link3", "Link4", "Link5", "Link6",
              "ee_base", "left_blade", "right_blade", "tcp_link"]
 JOINTS = ["joint1", "joint2", "joint3", "joint4", "joint5", "joint6"]
 
-# Half-width the robot may occupy: chassis is 0.56 wide, and the aisle is
-# 1.60 m, so anything under ~0.45 m is comfortably inside the vehicle corridor.
-LATERAL_BUDGET = 0.45
+# Half-width the stowed arm may occupy, measured from base_link.
+#
+# It is not the aisle half-width any more. The platform works a row from a lane
+# LANE_STANDOFF = 0.80 m off it, so the binding side is the vine: the trunks sit
+# 0.80 m away and the fruit hangs roughly in the row plane with a ~0.08 m
+# cluster radius, leaving about 0.72 m before anything is touched. 0.62 m keeps
+# ~0.10 m of margin on that side. The far side is the rest of the aisle,
+# 1.4-2.2 m depending on the gap, and never binds.
+#
+# The CR5 fitted 0.45 m folded; the CR10 links are ~40% longer and its tightest
+# collision-free fold is 0.565 m, so the old budget rejects every candidate.
+LATERAL_BUDGET = 0.62
 
 
 def candidates():
@@ -79,7 +88,7 @@ def main():
 
         vreq = GetStateValidityRequest()
         vreq.robot_state = rs
-        vreq.group_name = "cr5_arm"
+        vreq.group_name = "arm"
         vres = validity(vreq)
 
         results.append((lat, top, q, vres.valid, len(vres.contacts)))

@@ -1,0 +1,1043 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <model name="polytunnel">
+    <static>true</static>
+    <link name="frame">
+      <visual name="hoop_0">
+        <pose>-0.6000 -6.0000 1.1000 0 0.00000 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>2.2000</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_0_c">
+        <pose>-0.6000 -6.0000 1.1000 0 0.00000 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>2.2000</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_1">
+        <pose>-0.2826 -6.0000 2.5134 0 0.79173 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_1_c">
+        <pose>-0.2826 -6.0000 2.5134 0 0.79173 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_2">
+        <pose>0.3830 -6.0000 3.1057 0 0.89561 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_2_c">
+        <pose>0.3830 -6.0000 3.1057 0 0.89561 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_3">
+        <pose>1.1065 -6.0000 3.6257 0 0.99948 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_3_c">
+        <pose>1.1065 -6.0000 3.6257 0 0.99948 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_4">
+        <pose>1.8799 -6.0000 4.0679 0 1.10336 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_4_c">
+        <pose>1.8799 -6.0000 4.0679 0 1.10336 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_5">
+        <pose>2.6951 -6.0000 4.4275 0 1.20723 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_5_c">
+        <pose>2.6951 -6.0000 4.4275 0 1.20723 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_6">
+        <pose>3.5431 -6.0000 4.7007 0 1.31111 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_6_c">
+        <pose>3.5431 -6.0000 4.7007 0 1.31111 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_7">
+        <pose>4.4149 -6.0000 4.8845 0 1.41498 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_7_c">
+        <pose>4.4149 -6.0000 4.8845 0 1.41498 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_8">
+        <pose>5.3010 -6.0000 4.9768 0 1.51886 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_8_c">
+        <pose>5.3010 -6.0000 4.9768 0 1.51886 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_9">
+        <pose>6.1920 -6.0000 4.9768 0 1.62273 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_9_c">
+        <pose>6.1920 -6.0000 4.9768 0 1.62273 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_10">
+        <pose>7.0781 -6.0000 4.8845 0 1.72661 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_10_c">
+        <pose>7.0781 -6.0000 4.8845 0 1.72661 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_11">
+        <pose>7.9499 -6.0000 4.7007 0 1.83048 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_11_c">
+        <pose>7.9499 -6.0000 4.7007 0 1.83048 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_12">
+        <pose>8.7979 -6.0000 4.4275 0 1.93436 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_12_c">
+        <pose>8.7979 -6.0000 4.4275 0 1.93436 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_13">
+        <pose>9.6131 -6.0000 4.0679 0 2.03824 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_13_c">
+        <pose>9.6131 -6.0000 4.0679 0 2.03824 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_14">
+        <pose>10.3865 -6.0000 3.6257 0 2.14211 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_14_c">
+        <pose>10.3865 -6.0000 3.6257 0 2.14211 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_15">
+        <pose>11.1100 -6.0000 3.1057 0 2.24599 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_15_c">
+        <pose>11.1100 -6.0000 3.1057 0 2.24599 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_16">
+        <pose>11.7756 -6.0000 2.5134 0 2.34986 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_16_c">
+        <pose>11.7756 -6.0000 2.5134 0 2.34986 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_17">
+        <pose>12.0930 -6.0000 1.1000 0 3.14159 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>2.2000</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_17_c">
+        <pose>12.0930 -6.0000 1.1000 0 3.14159 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>2.2000</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_18">
+        <pose>-0.6000 -3.0000 1.1000 0 0.00000 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>2.2000</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_18_c">
+        <pose>-0.6000 -3.0000 1.1000 0 0.00000 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>2.2000</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_19">
+        <pose>-0.2826 -3.0000 2.5134 0 0.79173 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_19_c">
+        <pose>-0.2826 -3.0000 2.5134 0 0.79173 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_20">
+        <pose>0.3830 -3.0000 3.1057 0 0.89561 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_20_c">
+        <pose>0.3830 -3.0000 3.1057 0 0.89561 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_21">
+        <pose>1.1065 -3.0000 3.6257 0 0.99948 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_21_c">
+        <pose>1.1065 -3.0000 3.6257 0 0.99948 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_22">
+        <pose>1.8799 -3.0000 4.0679 0 1.10336 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_22_c">
+        <pose>1.8799 -3.0000 4.0679 0 1.10336 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_23">
+        <pose>2.6951 -3.0000 4.4275 0 1.20723 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_23_c">
+        <pose>2.6951 -3.0000 4.4275 0 1.20723 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_24">
+        <pose>3.5431 -3.0000 4.7007 0 1.31111 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_24_c">
+        <pose>3.5431 -3.0000 4.7007 0 1.31111 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_25">
+        <pose>4.4149 -3.0000 4.8845 0 1.41498 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_25_c">
+        <pose>4.4149 -3.0000 4.8845 0 1.41498 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_26">
+        <pose>5.3010 -3.0000 4.9768 0 1.51886 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_26_c">
+        <pose>5.3010 -3.0000 4.9768 0 1.51886 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_27">
+        <pose>6.1920 -3.0000 4.9768 0 1.62273 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_27_c">
+        <pose>6.1920 -3.0000 4.9768 0 1.62273 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_28">
+        <pose>7.0781 -3.0000 4.8845 0 1.72661 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_28_c">
+        <pose>7.0781 -3.0000 4.8845 0 1.72661 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_29">
+        <pose>7.9499 -3.0000 4.7007 0 1.83048 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_29_c">
+        <pose>7.9499 -3.0000 4.7007 0 1.83048 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_30">
+        <pose>8.7979 -3.0000 4.4275 0 1.93436 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_30_c">
+        <pose>8.7979 -3.0000 4.4275 0 1.93436 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_31">
+        <pose>9.6131 -3.0000 4.0679 0 2.03824 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_31_c">
+        <pose>9.6131 -3.0000 4.0679 0 2.03824 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_32">
+        <pose>10.3865 -3.0000 3.6257 0 2.14211 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_32_c">
+        <pose>10.3865 -3.0000 3.6257 0 2.14211 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_33">
+        <pose>11.1100 -3.0000 3.1057 0 2.24599 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_33_c">
+        <pose>11.1100 -3.0000 3.1057 0 2.24599 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_34">
+        <pose>11.7756 -3.0000 2.5134 0 2.34986 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_34_c">
+        <pose>11.7756 -3.0000 2.5134 0 2.34986 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_35">
+        <pose>12.0930 -3.0000 1.1000 0 3.14159 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>2.2000</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_35_c">
+        <pose>12.0930 -3.0000 1.1000 0 3.14159 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>2.2000</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_36">
+        <pose>-0.6000 0.0000 1.1000 0 0.00000 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>2.2000</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_36_c">
+        <pose>-0.6000 0.0000 1.1000 0 0.00000 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>2.2000</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_37">
+        <pose>-0.2826 0.0000 2.5134 0 0.79173 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_37_c">
+        <pose>-0.2826 0.0000 2.5134 0 0.79173 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_38">
+        <pose>0.3830 0.0000 3.1057 0 0.89561 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_38_c">
+        <pose>0.3830 0.0000 3.1057 0 0.89561 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_39">
+        <pose>1.1065 0.0000 3.6257 0 0.99948 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_39_c">
+        <pose>1.1065 0.0000 3.6257 0 0.99948 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_40">
+        <pose>1.8799 0.0000 4.0679 0 1.10336 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_40_c">
+        <pose>1.8799 0.0000 4.0679 0 1.10336 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_41">
+        <pose>2.6951 0.0000 4.4275 0 1.20723 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_41_c">
+        <pose>2.6951 0.0000 4.4275 0 1.20723 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_42">
+        <pose>3.5431 0.0000 4.7007 0 1.31111 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_42_c">
+        <pose>3.5431 0.0000 4.7007 0 1.31111 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_43">
+        <pose>4.4149 0.0000 4.8845 0 1.41498 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_43_c">
+        <pose>4.4149 0.0000 4.8845 0 1.41498 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_44">
+        <pose>5.3010 0.0000 4.9768 0 1.51886 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_44_c">
+        <pose>5.3010 0.0000 4.9768 0 1.51886 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_45">
+        <pose>6.1920 0.0000 4.9768 0 1.62273 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_45_c">
+        <pose>6.1920 0.0000 4.9768 0 1.62273 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_46">
+        <pose>7.0781 0.0000 4.8845 0 1.72661 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_46_c">
+        <pose>7.0781 0.0000 4.8845 0 1.72661 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_47">
+        <pose>7.9499 0.0000 4.7007 0 1.83048 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_47_c">
+        <pose>7.9499 0.0000 4.7007 0 1.83048 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_48">
+        <pose>8.7979 0.0000 4.4275 0 1.93436 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_48_c">
+        <pose>8.7979 0.0000 4.4275 0 1.93436 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_49">
+        <pose>9.6131 0.0000 4.0679 0 2.03824 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_49_c">
+        <pose>9.6131 0.0000 4.0679 0 2.03824 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_50">
+        <pose>10.3865 0.0000 3.6257 0 2.14211 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_50_c">
+        <pose>10.3865 0.0000 3.6257 0 2.14211 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_51">
+        <pose>11.1100 0.0000 3.1057 0 2.24599 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_51_c">
+        <pose>11.1100 0.0000 3.1057 0 2.24599 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_52">
+        <pose>11.7756 0.0000 2.5134 0 2.34986 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_52_c">
+        <pose>11.7756 0.0000 2.5134 0 2.34986 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_53">
+        <pose>12.0930 0.0000 1.1000 0 3.14159 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>2.2000</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_53_c">
+        <pose>12.0930 0.0000 1.1000 0 3.14159 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>2.2000</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_54">
+        <pose>-0.6000 3.0000 1.1000 0 0.00000 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>2.2000</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_54_c">
+        <pose>-0.6000 3.0000 1.1000 0 0.00000 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>2.2000</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_55">
+        <pose>-0.2826 3.0000 2.5134 0 0.79173 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_55_c">
+        <pose>-0.2826 3.0000 2.5134 0 0.79173 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_56">
+        <pose>0.3830 3.0000 3.1057 0 0.89561 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_56_c">
+        <pose>0.3830 3.0000 3.1057 0 0.89561 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_57">
+        <pose>1.1065 3.0000 3.6257 0 0.99948 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_57_c">
+        <pose>1.1065 3.0000 3.6257 0 0.99948 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_58">
+        <pose>1.8799 3.0000 4.0679 0 1.10336 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_58_c">
+        <pose>1.8799 3.0000 4.0679 0 1.10336 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_59">
+        <pose>2.6951 3.0000 4.4275 0 1.20723 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_59_c">
+        <pose>2.6951 3.0000 4.4275 0 1.20723 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_60">
+        <pose>3.5431 3.0000 4.7007 0 1.31111 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_60_c">
+        <pose>3.5431 3.0000 4.7007 0 1.31111 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_61">
+        <pose>4.4149 3.0000 4.8845 0 1.41498 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_61_c">
+        <pose>4.4149 3.0000 4.8845 0 1.41498 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_62">
+        <pose>5.3010 3.0000 4.9768 0 1.51886 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_62_c">
+        <pose>5.3010 3.0000 4.9768 0 1.51886 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_63">
+        <pose>6.1920 3.0000 4.9768 0 1.62273 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_63_c">
+        <pose>6.1920 3.0000 4.9768 0 1.62273 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_64">
+        <pose>7.0781 3.0000 4.8845 0 1.72661 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_64_c">
+        <pose>7.0781 3.0000 4.8845 0 1.72661 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_65">
+        <pose>7.9499 3.0000 4.7007 0 1.83048 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_65_c">
+        <pose>7.9499 3.0000 4.7007 0 1.83048 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_66">
+        <pose>8.7979 3.0000 4.4275 0 1.93436 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_66_c">
+        <pose>8.7979 3.0000 4.4275 0 1.93436 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_67">
+        <pose>9.6131 3.0000 4.0679 0 2.03824 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_67_c">
+        <pose>9.6131 3.0000 4.0679 0 2.03824 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_68">
+        <pose>10.3865 3.0000 3.6257 0 2.14211 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_68_c">
+        <pose>10.3865 3.0000 3.6257 0 2.14211 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_69">
+        <pose>11.1100 3.0000 3.1057 0 2.24599 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_69_c">
+        <pose>11.1100 3.0000 3.1057 0 2.24599 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_70">
+        <pose>11.7756 3.0000 2.5134 0 2.34986 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_70_c">
+        <pose>11.7756 3.0000 2.5134 0 2.34986 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_71">
+        <pose>12.0930 3.0000 1.1000 0 3.14159 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>2.2000</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_71_c">
+        <pose>12.0930 3.0000 1.1000 0 3.14159 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>2.2000</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_72">
+        <pose>-0.6000 6.0000 1.1000 0 0.00000 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>2.2000</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_72_c">
+        <pose>-0.6000 6.0000 1.1000 0 0.00000 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>2.2000</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_73">
+        <pose>-0.2826 6.0000 2.5134 0 0.79173 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_73_c">
+        <pose>-0.2826 6.0000 2.5134 0 0.79173 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_74">
+        <pose>0.3830 6.0000 3.1057 0 0.89561 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_74_c">
+        <pose>0.3830 6.0000 3.1057 0 0.89561 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_75">
+        <pose>1.1065 6.0000 3.6257 0 0.99948 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_75_c">
+        <pose>1.1065 6.0000 3.6257 0 0.99948 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_76">
+        <pose>1.8799 6.0000 4.0679 0 1.10336 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_76_c">
+        <pose>1.8799 6.0000 4.0679 0 1.10336 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_77">
+        <pose>2.6951 6.0000 4.4275 0 1.20723 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_77_c">
+        <pose>2.6951 6.0000 4.4275 0 1.20723 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_78">
+        <pose>3.5431 6.0000 4.7007 0 1.31111 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_78_c">
+        <pose>3.5431 6.0000 4.7007 0 1.31111 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_79">
+        <pose>4.4149 6.0000 4.8845 0 1.41498 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_79_c">
+        <pose>4.4149 6.0000 4.8845 0 1.41498 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_80">
+        <pose>5.3010 6.0000 4.9768 0 1.51886 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_80_c">
+        <pose>5.3010 6.0000 4.9768 0 1.51886 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_81">
+        <pose>6.1920 6.0000 4.9768 0 1.62273 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_81_c">
+        <pose>6.1920 6.0000 4.9768 0 1.62273 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_82">
+        <pose>7.0781 6.0000 4.8845 0 1.72661 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_82_c">
+        <pose>7.0781 6.0000 4.8845 0 1.72661 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_83">
+        <pose>7.9499 6.0000 4.7007 0 1.83048 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_83_c">
+        <pose>7.9499 6.0000 4.7007 0 1.83048 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_84">
+        <pose>8.7979 6.0000 4.4275 0 1.93436 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_84_c">
+        <pose>8.7979 6.0000 4.4275 0 1.93436 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_85">
+        <pose>9.6131 6.0000 4.0679 0 2.03824 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_85_c">
+        <pose>9.6131 6.0000 4.0679 0 2.03824 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_86">
+        <pose>10.3865 6.0000 3.6257 0 2.14211 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_86_c">
+        <pose>10.3865 6.0000 3.6257 0 2.14211 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_87">
+        <pose>11.1100 6.0000 3.1057 0 2.24599 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_87_c">
+        <pose>11.1100 6.0000 3.1057 0 2.24599 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_88">
+        <pose>11.7756 6.0000 2.5134 0 2.34986 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_88_c">
+        <pose>11.7756 6.0000 2.5134 0 2.34986 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>0.8921</length></cylinder></geometry>
+      </collision>
+      <visual name="hoop_89">
+        <pose>12.0930 6.0000 1.1000 0 3.14159 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>2.2000</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="hoop_89_c">
+        <pose>12.0930 6.0000 1.1000 0 3.14159 0</pose>
+        <geometry><cylinder><radius>0.0320</radius><length>2.2000</length></cylinder></geometry>
+      </collision>
+      <visual name="purlin_0">
+        <pose>-0.6000 0.0000 2.2000 1.5708 0 0</pose>
+        <geometry><cylinder><radius>0.020</radius><length>12.000</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="purlin_0_c">
+        <pose>-0.6000 0.0000 2.2000 1.5708 0 0</pose>
+        <geometry><cylinder><radius>0.020</radius><length>12.000</length></cylinder></geometry>
+      </collision>
+      <visual name="purlin_4">
+        <pose>2.2781 0.0000 4.2689 1.5708 0 0</pose>
+        <geometry><cylinder><radius>0.020</radius><length>12.000</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="purlin_4_c">
+        <pose>2.2781 0.0000 4.2689 1.5708 0 0</pose>
+        <geometry><cylinder><radius>0.020</radius><length>12.000</length></cylinder></geometry>
+      </collision>
+      <visual name="purlin_8">
+        <pose>5.7465 0.0000 5.0000 1.5708 0 0</pose>
+        <geometry><cylinder><radius>0.020</radius><length>12.000</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="purlin_8_c">
+        <pose>5.7465 0.0000 5.0000 1.5708 0 0</pose>
+        <geometry><cylinder><radius>0.020</radius><length>12.000</length></cylinder></geometry>
+      </collision>
+      <visual name="purlin_12">
+        <pose>9.2149 0.0000 4.2689 1.5708 0 0</pose>
+        <geometry><cylinder><radius>0.020</radius><length>12.000</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="purlin_12_c">
+        <pose>9.2149 0.0000 4.2689 1.5708 0 0</pose>
+        <geometry><cylinder><radius>0.020</radius><length>12.000</length></cylinder></geometry>
+      </collision>
+      <visual name="purlin_16">
+        <pose>12.0930 0.0000 2.2000 1.5708 0 0</pose>
+        <geometry><cylinder><radius>0.020</radius><length>12.000</length></cylinder></geometry>
+        <material><ambient>0.42 0.44 0.46 1</ambient><diffuse>0.68 0.70 0.72 1</diffuse></material>
+      </visual>
+      <collision name="purlin_16_c">
+        <pose>12.0930 0.0000 2.2000 1.5708 0 0</pose>
+        <geometry><cylinder><radius>0.020</radius><length>12.000</length></cylinder></geometry>
+      </collision>
+      <visual name="film_0">
+        <pose>-0.6000 0.0000 1.1000 0 0.00000 0</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>0.012 12.000 2.2000</size></box></geometry>
+        <material>
+          <ambient>0.85 0.88 0.90 0.28</ambient>
+          <diffuse>0.92 0.95 0.97 0.28</diffuse>
+          <specular>0.30 0.30 0.30 8</specular>
+        </material>
+      </visual>
+      <visual name="film_2">
+        <pose>-0.2826 0.0000 2.5134 0 0.79173 0</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
+        <material>
+          <ambient>0.85 0.88 0.90 0.28</ambient>
+          <diffuse>0.92 0.95 0.97 0.28</diffuse>
+          <specular>0.30 0.30 0.30 8</specular>
+        </material>
+      </visual>
+      <visual name="film_3">
+        <pose>0.3830 0.0000 3.1057 0 0.89561 0</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
+        <material>
+          <ambient>0.85 0.88 0.90 0.28</ambient>
+          <diffuse>0.92 0.95 0.97 0.28</diffuse>
+          <specular>0.30 0.30 0.30 8</specular>
+        </material>
+      </visual>
+      <visual name="film_4">
+        <pose>1.1065 0.0000 3.6257 0 0.99948 0</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
+        <material>
+          <ambient>0.85 0.88 0.90 0.28</ambient>
+          <diffuse>0.92 0.95 0.97 0.28</diffuse>
+          <specular>0.30 0.30 0.30 8</specular>
+        </material>
+      </visual>
+      <visual name="film_5">
+        <pose>1.8799 0.0000 4.0679 0 1.10336 0</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
+        <material>
+          <ambient>0.85 0.88 0.90 0.28</ambient>
+          <diffuse>0.92 0.95 0.97 0.28</diffuse>
+          <specular>0.30 0.30 0.30 8</specular>
+        </material>
+      </visual>
+      <visual name="film_6">
+        <pose>2.6951 0.0000 4.4275 0 1.20723 0</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
+        <material>
+          <ambient>0.85 0.88 0.90 0.28</ambient>
+          <diffuse>0.92 0.95 0.97 0.28</diffuse>
+          <specular>0.30 0.30 0.30 8</specular>
+        </material>
+      </visual>
+      <visual name="film_7">
+        <pose>3.5431 0.0000 4.7007 0 1.31111 0</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
+        <material>
+          <ambient>0.85 0.88 0.90 0.28</ambient>
+          <diffuse>0.92 0.95 0.97 0.28</diffuse>
+          <specular>0.30 0.30 0.30 8</specular>
+        </material>
+      </visual>
+      <visual name="film_8">
+        <pose>4.4149 0.0000 4.8845 0 1.41498 0</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
+        <material>
+          <ambient>0.85 0.88 0.90 0.28</ambient>
+          <diffuse>0.92 0.95 0.97 0.28</diffuse>
+          <specular>0.30 0.30 0.30 8</specular>
+        </material>
+      </visual>
+      <visual name="film_9">
+        <pose>5.3010 0.0000 4.9768 0 1.51886 0</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
+        <material>
+          <ambient>0.85 0.88 0.90 0.28</ambient>
+          <diffuse>0.92 0.95 0.97 0.28</diffuse>
+          <specular>0.30 0.30 0.30 8</specular>
+        </material>
+      </visual>
+      <visual name="film_10">
+        <pose>6.1920 0.0000 4.9768 0 1.62273 0</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
+        <material>
+          <ambient>0.85 0.88 0.90 0.28</ambient>
+          <diffuse>0.92 0.95 0.97 0.28</diffuse>
+          <specular>0.30 0.30 0.30 8</specular>
+        </material>
+      </visual>
+      <visual name="film_11">
+        <pose>7.0781 0.0000 4.8845 0 1.72661 0</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
+        <material>
+          <ambient>0.85 0.88 0.90 0.28</ambient>
+          <diffuse>0.92 0.95 0.97 0.28</diffuse>
+          <specular>0.30 0.30 0.30 8</specular>
+        </material>
+      </visual>
+      <visual name="film_12">
+        <pose>7.9499 0.0000 4.7007 0 1.83048 0</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
+        <material>
+          <ambient>0.85 0.88 0.90 0.28</ambient>
+          <diffuse>0.92 0.95 0.97 0.28</diffuse>
+          <specular>0.30 0.30 0.30 8</specular>
+        </material>
+      </visual>
+      <visual name="film_13">
+        <pose>8.7979 0.0000 4.4275 0 1.93436 0</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
+        <material>
+          <ambient>0.85 0.88 0.90 0.28</ambient>
+          <diffuse>0.92 0.95 0.97 0.28</diffuse>
+          <specular>0.30 0.30 0.30 8</specular>
+        </material>
+      </visual>
+      <visual name="film_14">
+        <pose>9.6131 0.0000 4.0679 0 2.03824 0</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
+        <material>
+          <ambient>0.85 0.88 0.90 0.28</ambient>
+          <diffuse>0.92 0.95 0.97 0.28</diffuse>
+          <specular>0.30 0.30 0.30 8</specular>
+        </material>
+      </visual>
+      <visual name="film_15">
+        <pose>10.3865 0.0000 3.6257 0 2.14211 0</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
+        <material>
+          <ambient>0.85 0.88 0.90 0.28</ambient>
+          <diffuse>0.92 0.95 0.97 0.28</diffuse>
+          <specular>0.30 0.30 0.30 8</specular>
+        </material>
+      </visual>
+      <visual name="film_16">
+        <pose>11.1100 0.0000 3.1057 0 2.24599 0</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
+        <material>
+          <ambient>0.85 0.88 0.90 0.28</ambient>
+          <diffuse>0.92 0.95 0.97 0.28</diffuse>
+          <specular>0.30 0.30 0.30 8</specular>
+        </material>
+      </visual>
+      <visual name="film_17">
+        <pose>11.7756 0.0000 2.5134 0 2.34986 0</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>0.012 12.000 0.8921</size></box></geometry>
+        <material>
+          <ambient>0.85 0.88 0.90 0.28</ambient>
+          <diffuse>0.92 0.95 0.97 0.28</diffuse>
+          <specular>0.30 0.30 0.30 8</specular>
+        </material>
+      </visual>
+      <visual name="film_19">
+        <pose>12.0930 0.0000 1.1000 0 3.14159 0</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>0.012 12.000 2.2000</size></box></geometry>
+        <material>
+          <ambient>0.85 0.88 0.90 0.28</ambient>
+          <diffuse>0.92 0.95 0.97 0.28</diffuse>
+          <specular>0.30 0.30 0.30 8</specular>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>

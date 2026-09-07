@@ -1,36 +1,49 @@
 #!/usr/bin/env python3
-"""Dobot CR5 grape harvesting from the mobile vineyard platform.
+"""Dobot CR10 grape harvesting from the mobile platform, under the polytunnel.
 
-Per panel: drive the aisle until the panel is abreast of the arm, unstow, cut
-every cluster on that panel into the deck crate, stow, move on.
+Per cluster: stow the arm, drive along the row's working lane until the cluster
+is abreast of the column, unstow, cut it into the deck crate, stow, move on.
 
-Per cluster:
+The cut cycle itself:
 
     approach standoff -> descend onto the peduncle -> close blades (clamp)
     -> cut (stem joint released, cluster handed to the cutter) -> retreat
     -> carry to its slot in the deck crate -> open (release)
 
 "Cutting" is modelled with gazebo_ros_link_attacher: a cluster hangs off its
-row's fruiting wire by a runtime fixed joint; the cut attaches it to the robot
-flange and *then* removes the wire joint, so the fruit is never in free fall.
+row's cordon by a runtime fixed joint; the cut attaches it to the robot flange
+and *then* removes the cordon joint, so the fruit is never in free fall.
 
-What changed from the fixed-pedestal version
---------------------------------------------
-The arm base and the crate both ride on the platform now, so neither sits at a
+Why one stop per cluster and why the lane hugs the row
+-----------------------------------------------------
+The block is planted with the fruit at 1.40-1.70 m and the rows 2.2-3.0 m
+apart, and the row spacing is uneven, so there is no constant aisle geometry to
+lean on. From the centre of an aisle the fruit is 1.28-1.78 m away, past even a
+CR10; make_models.lane_x() therefore parks the platform LANE_STANDOFF = 0.80 m
+off the row it is picking, which brings the worst cluster to about 1.23 m. That
+still only leaves roughly +/-0.6 m of usable travel along the row from any one
+standpoint, which is less than the spacing between clusters -- hence a stop per
+cluster rather than a stop per panel.
+
+Frames
+------
+The arm base and the crate both ride on the platform, so neither sits at a
 constant place in the world. Vine-side poses are built in the world frame (the
 fruit does not move) but their azimuth is measured from wherever the arm column
 currently is; crate-side poses are built in `base_link` and pushed through TF
-into the planning frame. Cluster geometry is no longer three hand-written y
-coordinates -- it comes from make_models.bunch_layout(), which is also what
-generated the world, so the scene and the motion plan cannot drift apart.
+into the planning frame. Cluster geometry comes from make_models.bunch_layout(),
+which is also what generated the world, so the scene and the motion plan cannot
+drift apart.
 
 Collision safety: every motion is planned by MoveIt against a planning scene
 carrying the posts, the canopy wires, the ground and every cluster still on the
 vine. The crate and the vehicle are robot links, so MoveIt already avoids them.
-The only object deliberately removed is the one cluster being cut, and only for
-the final few centimetres of its own descent. `--verify` additionally watches
-the Gazebo poses of everything the arm is not supposed to touch and reports any
-that moved.
+The polytunnel is left out on purpose -- it is a single span whose only uprights
+are along the two outer edges, 1.8 m from the nearest working lane, and its arch
+clears 2.2 m everywhere the platform drives. The only object deliberately
+removed is the one cluster being cut, and only for the final few centimetres of
+its own descent. `--verify` additionally watches the Gazebo poses of everything
+the arm is not supposed to touch and reports any that moved.
 """
 import argparse
 import copy
@@ -55,12 +68,12 @@ from gazebo_msgs.srv import SpawnModel
 from gazebo_ros_link_attacher.srv import Attach, AttachRequest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from make_models import (WIRE_Z, CANOPY_Z, POST_H, PANEL_W, PANELS_PER_ROW,
-                         N_ROWS, ROW_LEN, ROW_DX, CRATE_BASE_XYZ, CRATE_INNER,
-                         CRATE_SLOTS, row_x, aisle_x, bunch_layout,
-                         grape_bunch)
+from make_models import (POST_H, PANEL_W, PANELS_PER_ROW, N_ROWS, ROW_LEN,
+                         LANE_STANDOFF, CRATE_BASE_XYZ, CRATE_INNER,
+                         CRATE_SLOTS, row_x, lane_x, canopy_z, tunnel_bounds,
+                         bunch_layout, grape_bunch)
 
-ROBOT_MODEL = "cr5_robot"
+ROBOT_MODEL = "cr10_robot"
 # ee_base/tcp_link are lumped into Link6 by the URDF->SDF fixed-joint merge,
 # so Link6 is the link that actually exists in Gazebo.
 ROBOT_EE_LINK = "Link6"
@@ -78,20 +91,21 @@ CRATE_FLOOR_Z = CRATE_BASE_XYZ[2] + CRATE_T
 DROP_CLEARANCE = 0.05              # fruit hangs this far above the floor
 
 # Prefilter only: a cluster is attempted if its grasp point is within this
-# straight-line distance of the arm base. The CR5 reaches 900 mm to the flange
-# and the cutter TCP sits 95 mm beyond it, so ~0.95 m is the outer envelope --
-# but whether a given pose solves is an IK question, not a radius one. This
-# just avoids burning planning time on obvious non-starters; --check-only
-# reports what actually solves.
+# straight-line distance of the arm base. The CR10 reaches 1300 mm to the
+# flange and the cutter TCP sits 95 mm beyond it; 1.30 m leaves the last stretch
+# of the envelope alone, where the postures are singular and the straight-line
+# descent afterwards will not run. Whether a given pose actually solves is an IK
+# question, not a radius one -- this only avoids burning planning time on
+# obvious non-starters, and --check-only reports what really solves.
 #
-# The geometry is tight by construction: the aisle runs midway between rows
-# 1.6 m apart, so the column always stands 0.80 m out from the fruit
-# horizontally, and the fruiting wire is another 0.32-0.41 m above the arm
-# base. Best case is therefore ~0.87 m of the ~0.95 m envelope, and a cluster
-# much more than 0.2 m off the beam is already outside it -- which is why the
-# platform parks once per cluster rather than once per panel.
-REACH = 0.95
-REACH_MIN = 0.25
+# Why the platform hugs the row instead of driving down the middle: rows are
+# 2.2-3.0 m apart, so an aisle centre is 1.10-1.50 m from the vine, and with
+# fruit at 1.40-1.70 m against an arm base at 0.75 m the straight-line distance
+# from mid-aisle runs 1.28-1.78 m. Even a CR10 loses the far half of the block
+# from there. make_models.lane_x() therefore parks LANE_STANDOFF (0.80 m) off
+# the row, which brings the worst cluster back to about 1.23 m.
+REACH = 1.30
+REACH_MIN = 0.35
 
 # Cutter tilted down by this much. A purely horizontal approach puts the
 # forearm at the same height as the top of the cluster and every plan collides;
@@ -142,7 +156,7 @@ class GrapeHarvester(object):
         moveit_commander.roscpp_initialize(sys.argv)
         self.robot = moveit_commander.RobotCommander()
         self.scene = moveit_commander.PlanningSceneInterface(synchronous=True)
-        self.arm = moveit_commander.MoveGroupCommander("cr5_arm")
+        self.arm = moveit_commander.MoveGroupCommander("arm")
         self.grip = moveit_commander.MoveGroupCommander("gripper")
 
         self.arm.set_planning_time(20.0)
@@ -300,7 +314,9 @@ class GrapeHarvester(object):
                 p = Pose()
                 p.position.x = spec["x"]
                 p.position.y = spec["y"]
-                p.position.z = WIRE_Z
+                # each row has its own cordon height, so this cannot be a
+                # single scene-wide constant any more
+                p.position.z = spec["cordon_z"]
                 p.orientation.w = 1.0
                 self.spawn(spec["name"], sdf, "", p, "world")
                 # wall clock, not rospy.sleep: /clock is frozen while physics
@@ -341,13 +357,17 @@ class GrapeHarvester(object):
         the platform drives. The crate and the vehicle are *robot links*, so
         MoveIt avoids them from the URDF and they must not be added here.
 
-        Deliberately not included: the fruiting wires (4 mm radius, 75 mm above
+        Deliberately not included: the fruiting wires (4 mm radius, just above
         the grasp points -- adding them only produces spurious planning
-        failures) and the peduncles, which the blades are supposed to close on.
+        failures), the peduncles, which the blades are supposed to close on,
+        and the polytunnel. The tunnel is a single span with its uprights only
+        along the two outer edges, and the nearest one is 1.8 m from the
+        nearest working lane against a 1.3 m arm, so it cannot be hit; its arch
+        clears 2.2 m everywhere the platform drives.
         """
-        margin = 1.5
-        self._box("ground", row_x(N_ROWS - 1) / 2.0, 0.0, -0.03,
-                  ROW_DX * (N_ROWS + 2) + margin, ROW_LEN + 2 * margin, 0.05)
+        x0, x1, y0, y1 = tunnel_bounds()
+        self._box("ground", (x0 + x1) / 2.0, (y0 + y1) / 2.0, -0.03,
+                  x1 - x0, y1 - y0, 0.05)
 
         for r in range(N_ROWS):
             x = row_x(r)
@@ -355,14 +375,15 @@ class GrapeHarvester(object):
                 self._cyl("post_r%d_%d" % (r, i), x,
                           -ROW_LEN / 2.0 + i * PANEL_W, POST_H / 2,
                           0.05, POST_H)
-            self._box("canopy_r%d" % r, x, 0.0, CANOPY_Z,
+            self._box("canopy_r%d" % r, x, 0.0, canopy_z(r),
                       0.02, ROW_LEN, 0.02)
 
-        # berry bodies only -- the top of each body sits pedu_len below the
-        # wire, so the blades never have to plan through it
+        # berry bodies only -- the top of each body sits pedu_len below its
+        # row's cordon, so the blades never have to plan through it
         for spec in specs:
             self._cyl(spec["name"], spec["x"], spec["y"],
-                      WIRE_Z - spec["pedu_len"] - spec["body_len"] / 2.0,
+                      spec["cordon_z"] - spec["pedu_len"]
+                      - spec["body_len"] / 2.0,
                       spec["r_top"] * 0.9, spec["body_len"])
 
         rospy.sleep(1.0)
@@ -445,7 +466,7 @@ class GrapeHarvester(object):
         in decides whether the following straight-line descent is possible.
         """
         req = GetPositionIKRequest()
-        req.ik_request.group_name = "cr5_arm"
+        req.ik_request.group_name = "arm"
         req.ik_request.ik_link_name = self.arm.get_end_effector_link()
         req.ik_request.robot_state = self.current_state()
         req.ik_request.avoid_collisions = avoid
@@ -740,7 +761,7 @@ class GrapeHarvester(object):
             # One stop per cluster, not per panel: see the REACH note above.
             # Parking once per 2 m panel would leave most of the fruit outside
             # the envelope and uncut.
-            lane = aisle_x(row)          # aisle immediately in front of row
+            lane = lane_x(row)           # LANE_STANDOFF off the row, not mid-aisle
             for spec in sorted(row_specs, key=lambda s: s["y"]):
                 if self.slots_used >= len(CRATE_SLOTS):
                     rospy.logwarn("crate full (%d slots): stopping",

@@ -1,15 +1,33 @@
 #!/usr/bin/env python3
-"""Generate config/cr5_grape.srdf.
+"""Generate config/cr10_grape.srdf.
 
 Written as a generator rather than by hand because the platform contributes a
 block of rigid link pairs whose collision checks all have to be switched off,
 and hand-maintaining ~50 <disable_collisions> lines is how typos get in.
+
+The stow pose is an argument, not a placeholder to fill in afterwards:
+
+    rosrun grape_harvest stow_check.py            # measures the envelope
+    python3 gen_srdf.py ../config/cr10_grape.srdf --stow 0 -1.30 2.40 -2.67 -1.5708 0
+
+An earlier version left __J1__ markers in the template for a human to
+substitute, which is a good way to ship an SRDF full of literal __J1__.
 """
+import argparse
 import itertools
 import os
 import sys
 
-OUT = sys.argv[1] if len(sys.argv) > 1 else "cr5_grape.srdf"
+# Folded over the deck for driving. The default is the starting point for
+# stow_check.py, not a measured result -- run it and pass --stow.
+DEFAULT_STOW = [0.0, -1.30, 2.40, -2.67, -1.5708, 0.0]
+
+ap = argparse.ArgumentParser()
+ap.add_argument("out", nargs="?", default="cr10_grape.srdf")
+ap.add_argument("--stow", nargs=6, type=float, default=DEFAULT_STOW,
+                metavar=("J1", "J2", "J3", "J4", "J5", "J6"),
+                help="stow joint values, from stow_check.py")
+args = ap.parse_args()
 
 # Everything bolted rigidly to the chassis: no pair of these can ever collide,
 # so every combination is disabled.
@@ -57,12 +75,20 @@ body = "\n".join(
     '    <disable_collisions link1="%s" link2="%s" reason="%s"/>' % r
     for r in rows)
 
+stow = "\n".join(
+    '        <joint name="joint%d" value="%.4f"/>' % (i + 1, v)
+    for i, v in enumerate(args.stow))
+
 srdf = """<?xml version="1.0" ?>
-<robot name="cr5_robot">
-    <!-- The arm chain starts at the CR5 mounting flange on top of the column,
+<robot name="cr10_robot">
+    <!-- The arm chain starts at the CR10 mounting flange on top of the column,
          not at the chassis, and ends at the cutter TCP rather than the bare
-         Link6 flange. -->
-    <group name="cr5_arm">
+         Link6 flange.
+
+         The group is called `arm`, not `cr10_arm`: the name is baked into six
+         config files and five scripts, and one that encodes the model has to
+         be chased through all of them the next time the model changes. -->
+    <group name="arm">
         <chain base_link="arm_base_link" tip_link="tcp_link"/>
     </group>
     <group name="gripper">
@@ -70,9 +96,9 @@ srdf = """<?xml version="1.0" ?>
         <joint name="right_blade_joint"/>
     </group>
     <end_effector name="cutter" parent_link="tcp_link" group="gripper"
-                  parent_group="cr5_arm"/>
+                  parent_group="arm"/>
 
-    <group_state name="home" group="cr5_arm">
+    <group_state name="home" group="arm">
         <joint name="joint1" value="0"/>
         <joint name="joint2" value="0"/>
         <joint name="joint3" value="0"/>
@@ -81,7 +107,7 @@ srdf = """<?xml version="1.0" ?>
         <joint name="joint6" value="0"/>
     </group_state>
     <!-- elbow-up posture facing the vine, cutter roughly horizontal -->
-    <group_state name="scan" group="cr5_arm">
+    <group_state name="scan" group="arm">
         <joint name="joint1" value="0"/>
         <joint name="joint2" value="-0.7"/>
         <joint name="joint3" value="1.4"/>
@@ -89,16 +115,12 @@ srdf = """<?xml version="1.0" ?>
         <joint name="joint5" value="-1.5708"/>
         <joint name="joint6" value="0"/>
     </group_state>
-    <!-- STOW: folded upright over the deck for driving between rows.
-         Values come from scripts/stow_check.py, which measures the actual
-         link envelope rather than guessing. -->
-    <group_state name="stow" group="cr5_arm">
-        <joint name="joint1" value="__J1__"/>
-        <joint name="joint2" value="__J2__"/>
-        <joint name="joint3" value="__J3__"/>
-        <joint name="joint4" value="__J4__"/>
-        <joint name="joint5" value="__J5__"/>
-        <joint name="joint6" value="__J6__"/>
+    <!-- STOW: folded over the deck for driving between rows. Values come from
+         scripts/stow_check.py, which measures the actual link envelope rather
+         than guessing, and has to be re-run whenever the arm changes -- the
+         CR10's links are 40%% longer than the CR5's. -->
+    <group_state name="stow" group="arm">
+%s
     </group_state>
     <group_state name="open" group="gripper">
         <joint name="left_blade_joint" value="0.042"/>
@@ -117,8 +139,9 @@ srdf = """<?xml version="1.0" ?>
 
 %s
 </robot>
-""" % body
+""" % (stow, body)
 
-with open(OUT, "w") as f:
+with open(args.out, "w") as f:
     f.write(srdf)
-print("wrote %s (%d disable_collisions pairs)" % (OUT, len(rows)))
+print("wrote %s (%d disable_collisions pairs, stow=%s)"
+      % (args.out, len(rows), " ".join("%.4f" % v for v in args.stow)))

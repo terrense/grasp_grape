@@ -5,10 +5,13 @@
   <arg name="gui"    default="true"/>
   <arg name="paused" default="false"/>
 
-  <!-- Spawn pose. Aisle 0 is at x = -0.22 (see make_models.aisle_x); the robot
-       starts short of the block at y = -5.6 facing +y, i.e. down the aisle. -->
-  <arg name="x"   default="-0.22"/>
-  <arg name="y"   default="-5.60"/>
+  <!-- Spawn pose: on the working lane of row 0, which make_models.lane_x(0)
+       puts at x = 1.20, i.e. 0.80 m off the row, NOT the aisle centre. Rows are
+       2.2-3.0 m apart, so an aisle centre is 1.1-1.5 m from the vine, too
+       far out for the arm to reach fruit hanging at 1.4-1.7 m. The robot
+       starts south of the block, inside the polytunnel, facing +y. -->
+  <arg name="x"   default="1.20"/>
+  <arg name="y"   default="-5.20"/>
   <arg name="z"   default="0.06"/>
   <arg name="yaw" default="1.5708"/>
 
@@ -26,15 +29,15 @@
   </include>
 
   <param name="robot_description"
-         command="$(find xacro)/xacro $(find grape_harvest)/urdf/cr5_grape.xacro"/>
+         command="$(find xacro)/xacro $(find grape_harvest)/urdf/cr10_grape.xacro"/>
 
   <!-- Spawned with the arm already near the stow pose so it does not flail
        through the trellis while the controllers come up. -->
-  <node name="spawn_cr5" pkg="gazebo_ros" type="spawn_model" output="screen"
-        args="-urdf -param robot_description -model cr5_robot
+  <node name="spawn_robot" pkg="gazebo_ros" type="spawn_model" output="screen"
+        args="-urdf -param robot_description -model cr10_robot
               -x $(arg x) -y $(arg y) -z $(arg z) -Y $(arg yaw)
-              -J joint1 0 -J joint2 -1.3 -J joint3 2.4
-              -J joint4 -2.67 -J joint5 -1.5708 -J joint6 0
+              -J joint1 0 -J joint2 -0.9 -J joint3 2.4
+              -J joint4 -3.0708 -J joint5 -1.5708 -J joint6 0
               -unpause"/>
 
   <rosparam file="$(find grape_harvest)/config/gazebo_controllers.yaml" command="load"/>

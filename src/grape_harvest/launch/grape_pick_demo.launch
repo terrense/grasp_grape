@@ -11,7 +11,7 @@
        scene camera, not the GUI, and a headless gzserver keeps the sensor at a
        steady frame rate instead of dropping frames to feed the GUI render. -->
   <arg name="record"     default="false"/>
-  <arg name="video"      default="$(env HOME)/cr5_grape_harvest.mp4"/>
+  <arg name="video"      default="$(env HOME)/vineyard_harvest.mp4"/>
 
   <include file="$(find grape_harvest)/launch/vineyard_gazebo.launch">
     <arg name="gui" value="$(arg gui)"/>

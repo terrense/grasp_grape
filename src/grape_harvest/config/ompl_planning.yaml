@@ -7,7 +7,7 @@ planner_configs:
     range: 0.0
     goal_bias: 0.05
     delay_collision_checking: 1
-cr5_arm:
+arm:
   default_planner_config: RRTConnect
   planner_configs: [RRTConnect, RRTstar]
   projection_evaluator: joints(joint1,joint2)

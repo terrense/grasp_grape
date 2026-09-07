@@ -19,7 +19,7 @@ from pick_grape import tool_quat, pose_at, APPROACH, RETREAT
 
 rospy.init_node("diag", anonymous=True)
 moveit_commander.roscpp_initialize(sys.argv)
-arm = moveit_commander.MoveGroupCommander("cr5_arm")
+arm = moveit_commander.MoveGroupCommander("arm")
 
 cur = arm.get_current_pose().pose
 q = [cur.orientation.x, cur.orientation.y, cur.orientation.z, cur.orientation.w]
@@ -60,7 +60,7 @@ for avoid in (True, False):
     print("\n--- IK, avoid_collisions=%s ---" % avoid)
     for name, p in poses:
         req = GetPositionIKRequest()
-        req.ik_request.group_name = "cr5_arm"
+        req.ik_request.group_name = "arm"
         req.ik_request.ik_link_name = "tcp_link"
         req.ik_request.robot_state = arm.get_current_state() \
             if hasattr(arm, "get_current_state") else moveit_commander.RobotCommander().get_current_state()

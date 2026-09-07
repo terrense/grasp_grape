@@ -26,7 +26,7 @@ Visualization Manager:
       MoveIt_Use_Cartesian_Path: false
       MoveIt_Warehouse_Host: 127.0.0.1
       MoveIt_Warehouse_Port: 33829
-      Planning Group: cr5_arm
+      Planning Group: arm
       Planning Request:
         Colliding Link Color: 255; 0; 0
         Interactive Marker Size: 0.15
