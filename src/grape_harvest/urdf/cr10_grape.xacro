@@ -59,9 +59,16 @@
 
   <link name="base_link">
     <inertial>
-      <mass value="70.0"/>
-      <!-- box inertia for 1.50 x 0.56 x 0.22 -->
-      <inertia ixx="2.11" ixy="0" ixz="0" iyy="13.40" iyz="0" izz="14.95"/>
+      <!-- 650 kg of frame, battery and drive, with the centre of mass 0.14 m
+           below the chassis centre: the pack sits in the bottom of the frame,
+           which is where a field platform carries it and the only reason the
+           thing can survive being shoved by a post. Whole-vehicle centre of
+           mass lands near 0.25 m against a 0.32 m half-track. -->
+      <origin xyz="0 0 -0.14"/>
+      <mass value="650.0"/>
+      <!-- box inertia for 1.50 x 0.56 x 0.22, rounded up to stand in for
+           ballast spread through the frame rather than a uniform slab -->
+      <inertia ixx="25.0" ixy="0" ixz="0" iyy="130.0" iyz="0" izz="145.0"/>
     </inertial>
     <visual>
       <geometry><box size="${chassis_l} ${chassis_w} ${chassis_h}"/></geometry>
@@ -79,8 +86,10 @@
   <!-- skid plate: the underside guard a field platform needs, and it is what
        sets the 0.25 m ground clearance over clods -->
   <link name="skid_plate">
-    <inertial><mass value="6.0"/>
-      <inertia ixx="0.2" ixy="0" ixz="0" iyy="1.0" iyz="0" izz="1.2"/>
+    <!-- 40 kg of steel plate. Heavy, and as low as anything on the vehicle
+         gets, so it earns its weight twice. -->
+    <inertial><mass value="40.0"/>
+      <inertia ixx="1.2" ixy="0" ixz="0" iyy="6.5" iyz="0" izz="7.5"/>
     </inertial>
     <visual>
       <geometry><box size="${chassis_l*0.92} ${chassis_w*0.9} 0.03"/></geometry>
@@ -106,8 +115,10 @@
   <xacro:macro name="lug_wheel" params="name x y">
     <link name="${name}_link">
       <inertial>
-        <mass value="4.0"/>
-        <inertia ixx="0.0304" ixy="0" ixz="0" iyy="0.0512" iyz="0" izz="0.0304"/>
+        <!-- 18 kg: tyre, rim and the hub gearbox behind it. iyy is the spin
+             axis (m r^2 / 2); the other two are the transverse cylinder term. -->
+        <mass value="18.0"/>
+        <inertia ixx="0.137" ixy="0" ixz="0" iyy="0.230" iyz="0" izz="0.137"/>
       </inertial>
       <visual>
         <origin rpy="1.5708 0 0"/>
@@ -142,7 +153,8 @@
       <origin xyz="${x} ${y} ${wheel_r - chassis_z}"/>
       <parent link="base_link"/><child link="${name}_link"/>
       <axis xyz="0 1 0"/>
-      <limit effort="200" velocity="20"/>
+      <limit effort="900" velocity="20"/>
+      <dynamics damping="0.8" friction="2.0"/>
       <dynamics damping="0.2" friction="0.5"/>
     </joint>
   </xacro:macro>
@@ -434,18 +446,26 @@
 
   <!-- emitter aperture; the ray sensor is attached to this link and fires
        along its +Z -->
+  <!-- Emitter on top of the head, angled down-forward so the beam crosses the
+       TCP 0.184 m away. Firing straight along the approach axis from just
+       behind the tool put the stem inside the sensor's minimum range and threw
+       away the standoff a laser exists to have. -->
   <link name="laser_link">
-    <inertial><mass value="0.05"/>
-      <inertia ixx="1e-5" ixy="0" ixz="0" iyy="1e-5" iyz="0" izz="1e-5"/>
+    <inertial><mass value="0.15"/>
+      <inertia ixx="1e-4" ixy="0" ixz="0" iyy="1e-4" iyz="0" izz="1e-4"/>
     </inertial>
     <visual>
-      <origin xyz="0 0 0.006" rpy="0 0 0"/>
-      <geometry><cylinder radius="0.011" length="0.012"/></geometry>
+      <origin xyz="0 0 0.020" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.022" length="0.075"/></geometry>
       <material name="laser_red"/>
     </visual>
+    <collision>
+      <origin xyz="0 0 0.020" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.022" length="0.075"/></geometry>
+    </collision>
   </link>
   <joint name="laser_joint" type="fixed">
-    <origin xyz="0 0 0.075"/>
+    <origin xyz="-0.120 0 -0.050" rpy="0 0.7086 0"/>
     <parent link="ee_base"/><child link="laser_link"/>
   </joint>
 
@@ -571,7 +591,10 @@
       <wheelSeparation>${2*wheel_dy}</wheelSeparation>
       <wheelDiameter>${2*wheel_r}</wheelDiameter>
       <robotBaseFrame>base_footprint</robotBaseFrame>
-      <torque>220</torque>
+      <!-- 900 N.m per wheel: 800 kg needs about 55 N.m total to pull away
+           at 0.5 m/s^2, but skid steering scrubs all four tyres sideways
+           through every turn and that is where the headroom goes -->
+      <torque>900</torque>
       <commandTopic>cmd_vel</commandTopic>
       <odometryTopic>odom</odometryTopic>
       <odometryFrame>odom</odometryFrame>
@@ -672,8 +695,25 @@
   </gazebo>
 
   <!-- materials + contact properties -->
-  <gazebo reference="base_link"><material>Gazebo/Yellow</material></gazebo>
-  <gazebo reference="skid_plate"><material>Gazebo/DarkGrey</material></gazebo>
+  <!-- Compliant contact on the bodywork. Gazebo's default stiffness resolves a
+       post strike in one step and hands the whole impulse back to the vehicle,
+       which is what was flipping it; kp here is a few hundred kN/m with heavy
+       damping, so the same strike becomes a shove. Low friction on purpose too:
+       the chassis should slide along a post it clips, not catch on it. -->
+  <gazebo reference="base_link">
+    <material>Gazebo/Yellow</material>
+    <mu1>0.35</mu1><mu2>0.35</mu2>
+    <kp>2e5</kp><kd>1500</kd>
+    <minDepth>0.003</minDepth>
+    <maxVel>0.5</maxVel>
+  </gazebo>
+  <gazebo reference="skid_plate">
+    <material>Gazebo/DarkGrey</material>
+    <mu1>0.4</mu1><mu2>0.4</mu2>
+    <kp>3e5</kp><kd>1500</kd>
+    <minDepth>0.003</minDepth>
+    <maxVel>0.5</maxVel>
+  </gazebo>
   <gazebo reference="arm_column"><material>Gazebo/DarkGrey</material></gazebo>
   <gazebo reference="arm_base_link"><material>Gazebo/DarkGrey</material></gazebo>
   <gazebo reference="crate_link"><material>Gazebo/Wood</material></gazebo>
@@ -685,7 +725,9 @@
     <gazebo reference="${name}_link">
       <material>Gazebo/Black</material>
       <mu1>1.5</mu1><mu2>1.2</mu2>
-      <kp>1e6</kp><kd>50</kd>
+      <!-- 3e6 keeps an 800 kg vehicle from settling into the ground: at the old
+           1e6 the static deflection was 8 mm and the platform rode visibly low -->
+      <kp>3e6</kp><kd>300</kd>
       <minDepth>0.002</minDepth>
       <maxVel>1.0</maxVel>
     </gazebo>
@@ -715,8 +757,10 @@
 
        A ray sensor scans its own XY plane with angle 0 along +X, so it is
        pitched -90 deg to fire along the link's +Z, which is the approach axis.
-       Five samples across 0.7 deg give a narrow beam, about 4 mm across at the
-       working distance, instead of a single ray that can slip past a stem. -->
+       Nine samples across 4.6 deg give a spot about 14 mm across at the 184 mm
+       working distance. That is deliberately not a pencil beam: tool
+       positioning lands within about 12 mm laterally, and a perfectly
+       collimated beam would need accuracy nobody has. -->
   <gazebo reference="laser_link">
     <sensor name="cut_laser" type="ray">
       <pose>0 0 0 0 -1.5708 0</pose>
@@ -726,10 +770,10 @@
       <ray>
         <scan>
           <horizontal>
-            <samples>5</samples>
+            <samples>9</samples>
             <resolution>1</resolution>
-            <min_angle>-0.006</min_angle>
-            <max_angle>0.006</max_angle>
+            <min_angle>-0.04</min_angle>
+            <max_angle>0.04</max_angle>
           </horizontal>
         </scan>
         <range>

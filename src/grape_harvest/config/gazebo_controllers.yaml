@@ -20,34 +20,33 @@ arm_controller:
     # from the commanded path (PATH_TOLERANCE_VIOLATED on joint4). Path
     # tracking is not a meaningful signal for a kinematically driven joint;
     # the goal tolerance below still guards the endpoint.
-    # NOTE: 0.12 rad here is known to be too loose for the laser (its spot is
-    # ~4 mm and 0.12 rad over a 1.2 m CR10 is ~0.14 m of tool error), but
-    # tightening it to 0.01 alone made things worse, not better: the measured
-    # tool error at fire time went from 0.54 m to 1.03 m and the arm stopped
-    # leaving the stow posture altogether, while execute() still returned
-    # success. So the real fault is upstream of the tolerance -- trajectories
-    # are reporting success without moving the arm -- and tightening this only
-    # changes how far off it ends up. Left at 0.12 until that is found.
+    # Goal tolerance 0.05 rad. 0.01 was tried and measured *worse* at the
+    # tool (0.104 m against 0.061 m at 0.12), which is the controller
+    # spending longer settling rather than arriving closer; the beam now
+    # has a 184 mm standoff so along-axis error costs nothing anyway, and
+    # what is left to control is the lateral component.
     #
-    # Original reasoning for widening it to 0.12 for the shear cutter:
-    # shear cutter, because a rigidly attached cluster biases the
-    # SetPosition-driven joints by ~0.07 rad and the jaws had 96 mm of opening
-    # to absorb it. The laser does not: its spot is about 4 mm, and 0.12 rad
-    # over a 1.2 m CR10 is ~0.14 m of tool error, so a "successful" move could
-    # leave the beam pointing at nothing. Measured on the first laser run: the
-    # tool finished 0.54 m from the commanded pose and the controller still
-    # reported success.
+    # Original note: It was 0.12 for the shear cutter, whose jaws had
+    # 96 mm of opening to absorb the error; the laser spot is about 4 mm and
+    # 0.12 rad over a 1.2 m CR10 is ~0.14 m of tool error, so it has to be
+    # tight now. Measured: 0.061 m of tool error at 0.12, which put the beam
+    # past the stem instead of on it.
     #
-    # The cut happens BEFORE anything is attached, so the arm is unloaded
-    # exactly when accuracy matters. If the post-cut carry starts failing on
-    # tolerance, that is the load bias reappearing and it needs handling there,
-    # not by blinding the approach.
-    joint1: {trajectory: 0.0, goal: 0.12}
-    joint2: {trajectory: 0.0, goal: 0.12}
-    joint3: {trajectory: 0.0, goal: 0.12}
-    joint4: {trajectory: 0.0, goal: 0.12}
-    joint5: {trajectory: 0.0, goal: 0.12}
-    joint6: {trajectory: 0.0, goal: 0.12}
+    # Tightening this was tried once before and appeared to make things worse.
+    # It did not: at that point compute_cartesian_path results were being
+    # executed unretimed, so the arm was not moving at all and the tolerance
+    # was irrelevant. Retiming came first; this is the second half.
+    #
+    # The cut happens BEFORE the cluster is attached, so the arm is unloaded
+    # exactly when accuracy matters. The carry moves afterwards do run with the
+    # load bias, and if they start failing on tolerance that is where to fix
+    # it, not by blinding the approach.
+    joint1: {trajectory: 0.0, goal: 0.05}
+    joint2: {trajectory: 0.0, goal: 0.05}
+    joint3: {trajectory: 0.0, goal: 0.05}
+    joint4: {trajectory: 0.0, goal: 0.05}
+    joint5: {trajectory: 0.0, goal: 0.05}
+    joint6: {trajectory: 0.0, goal: 0.05}
   stop_trajectory_duration: 0.3
   state_publish_rate: 50
   action_monitor_rate: 20

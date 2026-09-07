@@ -98,6 +98,9 @@ RETREAT = 0.18
 # far" from "nothing in the beam".
 LASER_TOPIC = "cut_laser/scan"
 LASER_RANGE = 0.35                 # effective cutting distance, metres
+LASER_WORKING = 0.184              # emitter to TCP; the beam is aimed at
+                                   # the tool centre point, not along the
+                                   # approach axis
 LASER_DWELL = 1.5                  # seconds on target to sever a peduncle
 LASER_SETTLE = 0.4                 # let the arm stop ringing before firing
 
@@ -189,6 +192,7 @@ class GrapeHarvester(object):
         self.arm.set_num_planning_attempts(12)
         self.arm.set_goal_position_tolerance(0.003)
         self.arm.set_goal_orientation_tolerance(0.02)
+        self.speed = 0.35
         self.set_speed(0.35)
 
         self.beam = None            # latest LaserScan from the cutting head
@@ -217,6 +221,7 @@ class GrapeHarvester(object):
         rospy.loginfo("end effector  : %s", self.arm.get_end_effector_link())
 
     def set_speed(self, f):
+        self.speed = f
         self.arm.set_max_velocity_scaling_factor(f)
         self.arm.set_max_acceleration_scaling_factor(f)
 
@@ -647,6 +652,16 @@ class GrapeHarvester(object):
             rospy.loginfo("  cartesian coverage %.0f%%", frac * 100)
             if frac < 0.9:
                 break
+            # compute_cartesian_path returns a *path*, not a trajectory: the
+            # waypoints carry no timing. Handing that straight to execute() is
+            # accepted and reported as success, and the arm does not move --
+            # which is exactly how this failed for weeks. Every "cartesian
+            # coverage 100%" followed by a tool 0.5 m from where it was told to
+            # be was this. Retime it against the current state first.
+            plan = self.arm.retime_trajectory(
+                self.robot.get_current_state(), plan,
+                velocity_scaling_factor=self.speed,
+                acceleration_scaling_factor=self.speed)
             if self.arm.execute(plan, wait=True):
                 self.arm.stop()
                 return True
@@ -1044,14 +1059,23 @@ class GrapeHarvester(object):
             if name not in m.name:
                 continue
             p = m.pose[m.name.index(name)].position
+            # The cluster's model origin is the TOP of its peduncle, so even
+            # sitting on the crate floor the origin is a whole bunch-length
+            # above it (~0.92 m in base_link against a 0.77 m ceiling). Compare
+            # the berry body centre instead, or every successful drop reads as
+            # a miss.
+            spec = by_name.get(name)
+            drop = 0.0
+            if spec:
+                drop = spec["pedu_len"] + spec["body_len"] / 2.0
             # the crate rides on the deck, so "in the crate" is a base_link
             # question, not a world one
-            bx, by, bz = self.world_to_base(p.x, p.y, p.z)
+            bx, by, bz = self.world_to_base(p.x, p.y, p.z - drop)
             ok = (abs(bx - CRATE_BASE_XYZ[0]) < CRATE_INNER[0] / 2 + 0.05
                   and abs(by - CRATE_BASE_XYZ[1]) < CRATE_INNER[1] / 2 + 0.05
                   and bz < CRATE_BASE_XYZ[2] + CRATE_INNER[2] + 0.10)
             in_crate += int(ok)
-            rospy.loginfo("  %-16s base_link (%+.3f, %+.3f, %.3f)  %s",
+            rospy.loginfo("  %-16s body centre in base_link (%+.3f, %+.3f, %.3f)  %s",
                           name, bx, by, bz,
                           "IN CRATE" if ok else "NOT IN CRATE")
         rospy.loginfo("clusters in crate: %d/%d", in_crate, len(harvested))
