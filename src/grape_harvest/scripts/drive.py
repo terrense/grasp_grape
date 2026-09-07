@@ -8,6 +8,9 @@ slips too much on the clod track to place the arm afterwards.
 
 Run standalone for the clearance test:
     rosrun grape_harvest drive.py _row:=0 _stow_first:=true
+
+Add _excite:=true to run the VIO excitation pulses first; VINS-Mono will not
+initialise from a constant-velocity crawl.
 """
 import math
 import os
@@ -95,9 +98,13 @@ class BaseDriver(object):
                              min(self.V_MAX, self.K_ALONG * along))
             t.angular.z = max(-self.W_MAX,
                               min(self.W_MAX, self.K_YAW * yaw_err))
-            # slow down while the heading is still well off, so the platform
-            # straightens before it covers much ground
-            if abs(yaw_err) > 0.25:
+            # Slow down only when the platform is genuinely crabbing, i.e. its
+            # heading is far from the lane direction. Testing yaw_err here
+            # instead would count the aim offset the controller is deliberately
+            # holding as misalignment: a 0.12 m lane error alone puts aim past
+            # the threshold, and the platform then crawls at a third speed for
+            # the whole row (measured: 7.6 m in 180 s).
+            if abs(wrap(heading - yaw)) > 0.35:
                 t.linear.x *= 0.35
             self.pub.publish(t)
             rate.sleep()
@@ -107,6 +114,39 @@ class BaseDriver(object):
                       "[lane error %+.3f m]",
                       x, y, math.degrees(yaw), x - lane_x)
         return True
+
+    def excite(self, pulses=4, v=0.35, dt=0.9):
+        """Short forward/back pulses to give a monocular VIO something to work
+        with before the run proper.
+
+        VINS-Mono cannot initialise without acceleration excitation: it needs to
+        observe gravity and metric scale, and it checks the variance of linear
+        acceleration over its window before it will even try. A ground platform
+        creeping down a lane at constant velocity produces almost none, which is
+        why the estimator sat at "IMU excitation not enouth" through a 7.6 m
+        drive. Alternating accelerations, on the other hand, are exactly what it
+        wants, and on the clod track they come with pitch and roll for free.
+
+        This is a real-deployment manoeuvre, not a simulation trick: ground
+        robots running monocular VIO do this, or get pushed, before they trust
+        the estimate.
+        """
+        rospy.loginfo("VIO excitation: %d pulses", pulses)
+        rate = rospy.Rate(50)
+        for i in range(pulses):
+            for sign in (1.0, -1.0):
+                t = Twist()
+                t.linear.x = sign * v
+                t0 = rospy.Time.now()
+                while (rospy.Time.now() - t0).to_sec() < dt:
+                    if rospy.is_shutdown():
+                        return
+                    self.pub.publish(t)
+                    rate.sleep()
+        self.stop()
+        rospy.sleep(0.5)
+        rospy.loginfo("VIO excitation done; base at (%.2f, %.2f)",
+                      self.pose[0], self.pose[1])
 
     def face_heading(self, heading, tol=0.03, timeout=40.0):
         rospy.loginfo("turn -> %.1f deg", math.degrees(heading))
@@ -151,6 +191,8 @@ def main():
         arm.stop()
 
     d = BaseDriver()
+    if rospy.get_param("~excite", False):
+        d.excite()
     d.face_heading(math.pi / 2)
     d.drive_to_y(ROW_LEN / 2 + 1.5, lane)
     rospy.sleep(1.0)
