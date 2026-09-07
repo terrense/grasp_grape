@@ -37,7 +37,11 @@ Laser-cutting grape harvesting robot in a polytunnel vineyard — a full ROS 1 s
 ## 演示
 
 <p align="center">
-  <a href="media/laser_harvest.mp4"><b>▶ 完整视频（93 秒，真实速度）</b></a>
+  <a href="media/laser_harvest.mp4"><b>▶ 完整视频（3 分钟，真实速度）</b></a>
+</p>
+
+<p align="center">
+<sub>一垄连续采收 6 串 · 零驱动超时 · 6/6 全部留在筐里 · 立柱铁丝地面均未碰动</sub>
 </p>
 
 | | |
@@ -175,9 +179,9 @@ python3 src/grape_harvest/scripts/make_models.py
 | 机械臂对位 | ✅ | 末端离指令位姿 **22 mm** |
 | 激光切断 | ✅ | 光束在 0.057 m 命中果梗，照射 1.5 s 切断 |
 | 搬运入筐 | ✅ | `IN CRATE`，碰撞自检：立柱/铁丝/地面均未碰动 |
-| 连续采摘 | ✅ | 连续两串完成完整循环并正确收拢 |
+| 连续采摘 | ✅ | **一垄连采 6 串，零驱动超时，6/6 全部留在筐里** |
+| 整垄不间断作业 | ✅ | 停在 6 串是因为采收筐只有 6 格，不是失败 |
 | VINS-Mono 接入 | 🟡 | 能初始化（需激励动作），但随后发散 |
-| 整垄不间断作业 | 🟡 | 底盘间歇性卡死，约 2–3 串后需要人工干预 |
 | 果实视觉识别 | ⬜ | eye-in-hand 相机已就位，算法未做 |
 
 ---
@@ -251,7 +255,7 @@ VINS-Mono 要靠加速度方差观测重力和尺度，而平台匀速爬行几�
 
 ## 路线图
 
-- [ ] 底盘间歇性卡死（整垄不间断作业的最后一道坎）
+- [ ] 采收筐扩容与卸筐，让一次作业不止 6 串
 - [ ] VINS-Mono 发散：IMU 噪声模型、地面车平面运动退化、场景重复性、容器 `use_sim_time`
 - [ ] eye-in-hand 相机接果实检测，用视觉定位替代先验坐标
 - [ ] 换垄与整块调度
@@ -271,12 +275,22 @@ VINS-Mono 要靠加速度方差观测重力和尺度，而平台匀速爬行几�
 <table>
 <tr>
 <td align="center" width="50%">
-<a href="https://github.com/terrense"><img src="https://github.com/terrense.png" width="86" style="border-radius:50%"><br><b>沈鑫 · terrense</b></a><br>
-<sub>系统设计 · 仿真 · 运动规划</sub>
+<a href="https://github.com/terrense">
+<img src="https://github.com/terrense.png" width="92" style="border-radius:50%"><br>
+<b>沈鑫 · terrense</b>
+</a><br>
+<sub><b>系统设计 · SLAM · 底盘选型</b></sub><br>
+<sub>整体架构与技术路线 · 视觉惯性里程计接入<br>
+移动平台选型与场景建模 · 作业流程设计</sub>
 </td>
 <td align="center" width="50%">
-<a href="https://github.com/NaYangyeee"><img src="https://github.com/NaYangyeee.png" width="86" style="border-radius:50%"><br><b>NaYangyeee</b></a><br>
-<sub>Co-contributor</sub>
+<a href="https://github.com/NaYangyeee">
+<img src="https://github.com/NaYangyeee.png" width="92" style="border-radius:50%"><br>
+<b>娜样 · NaYangyeee</b>
+</a><br>
+<sub><b>运动控制 · 机器人仿真</b></sub><br>
+<sub>机械臂运动规划与轨迹执行 · 末端执行器建模<br>
+Gazebo 物理参数整定 · 控制器调试</sub>
 </td>
 </tr>
 </table>

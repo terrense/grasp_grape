@@ -67,9 +67,9 @@ from moveit_msgs.srv import (GetPositionIK, GetPositionIKRequest,
                              GetPlanningScene, GetPlanningSceneRequest)
 
 from std_srvs.srv import Empty
-from gazebo_msgs.msg import ModelStates
+from gazebo_msgs.msg import ModelState, ModelStates
 from nav_msgs.msg import Odometry
-from gazebo_msgs.srv import SpawnModel
+from gazebo_msgs.srv import SetModelState, SpawnModel
 from gazebo_ros_link_attacher.srv import Attach, AttachRequest
 from sensor_msgs.msg import LaserScan
 
@@ -85,6 +85,10 @@ ROBOT_MODEL = "cr10_robot"
 ROBOT_EE_LINK = "Link6"
 TRELLIS_MODEL = "trellis"
 BUNCH_LINK = "bunch_link"
+# The vehicle body as Gazebo sees it. URDF fixed joints are merged during the
+# SDF conversion, so crate_link, base_link, the skid plate and the masts are
+# all one link and it carries the name of the root of that chain.
+VEHICLE_BODY = "base_footprint"
 
 APPROACH = 0.15                    # standoff along the tool axis, metres
 RETREAT = 0.18
@@ -436,6 +440,9 @@ class GrapeHarvester(object):
         self.unpause = rospy.ServiceProxy("/gazebo/unpause_physics", Empty)
         self.attach = rospy.ServiceProxy("/link_attacher_node/attach", Attach)
         self.detach = rospy.ServiceProxy("/link_attacher_node/detach", Attach)
+        rospy.wait_for_service("/gazebo/set_model_state", timeout=30.0)
+        self.set_state = rospy.ServiceProxy("/gazebo/set_model_state",
+                                            SetModelState)
         rospy.loginfo("services up")
 
     def _att(self, srv, m1, l1, m2, l2):
@@ -837,6 +844,17 @@ class GrapeHarvester(object):
         rospy.loginfo("  released into the crate (ok=%s)", r3.ok)
         rospy.sleep(LANDING_SETTLE)
 
+        # Stand it in its slot, then fix it to the vehicle. Without the fix a
+        # row's worth of fruit shakes back out of an open crate on the clod
+        # track (six cut in one run, four left on the ground behind the
+        # platform, one flung 100 m); without the placing first, the fixed
+        # joint has to resolve whatever interpenetration the drop left behind
+        # and it resolves it into the chassis.
+        self.stow_in_crate(spec, slot)
+        r4 = self._att(self.attach, ROBOT_MODEL, VEHICLE_BODY, name,
+                       BUNCH_LINK)
+        rospy.loginfo("  riding in the crate (ok=%s)", r4.ok)
+
         # Lift clear first, THEN tell the planner about the fruit that is now
         # lying in the crate. Doing it the other way round drops a collision
         # object around the head while the head is still down inside the crate,
@@ -847,6 +865,26 @@ class GrapeHarvester(object):
             rospy.logwarn("  could not lift clear of the crate")
         self.add_settled_cluster(spec)
         return True
+
+    def stow_in_crate(self, spec, slot):
+        """Set the bunch down in its assigned slot, upright on the floor."""
+        dx, dy = CRATE_SLOTS[slot % len(CRATE_SLOTS)]
+        # model origin is the top of the peduncle, so the whole bunch sits
+        # above it: floor + peduncle + body puts the berries on the floor
+        bz = CRATE_FLOOR_Z + spec["pedu_len"] + spec["body_len"]
+        wx, wy, wz = self.base_to_world(CRATE_BASE_XYZ[0] + dx,
+                                        CRATE_BASE_XYZ[1] + dy, bz)
+        st = ModelState()
+        st.model_name = spec["name"]
+        st.reference_frame = "world"
+        st.pose.position.x, st.pose.position.y, st.pose.position.z = wx, wy, wz
+        st.pose.orientation.w = 1.0
+        try:
+            self.set_state(st)
+            rospy.loginfo("  set down in slot %d", slot)
+        except rospy.ServiceException as e:
+            rospy.logwarn("  could not place %s in the crate: %s",
+                          spec["name"], e)
 
     def harvest_here(self, specs, remaining):
         """Cut every cluster in `remaining` the arm can reach from right here.

@@ -19,6 +19,7 @@ import sys
 import rospy
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
+from sensor_msgs.msg import JointState
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from make_models import lane_x, ROW_LEN, row_x, N_ROWS, LANE_STANDOFF
@@ -30,17 +31,25 @@ def wrap(a):
 
 class BaseDriver(object):
     V_MAX = 0.45          # m/s; a harvesting platform crawls
+    V_MIN = 0.10          # m/s; floor under the approach, see the note in
+                          # drive_to_y about the last few centimetres
+    HALF_TRACK = 0.32     # m; must match wheel_dy in the xacro
     W_MAX = 0.7
     K_ALONG = 0.9
     K_LOOK = 2.2          # how hard a lane offset bends the aim heading
     AIM_MAX = 0.6         # rad; cap so it never aims across the row
     K_YAW = 2.0
-    LANE_TOL = 0.06       # m; how close to the lane counts as arrived
+    LANE_WARN = 0.12      # m; lane error worth warning about, because it
+                          # comes straight off the arm reach margin
 
     def __init__(self, cmd_topic="/cmd_vel"):
         self.pub = rospy.Publisher(cmd_topic, Twist, queue_size=1)
         self.pose = None      # (x, y, yaw)
+        self.vel = (0.0, 0.0)  # (linear speed, yaw rate) from ground truth
+        self.wheels = {}       # wheel joint -> (velocity, effort)
         rospy.Subscriber("/ground_truth/state", Odometry, self._cb,
+                         queue_size=1)
+        rospy.Subscriber("/joint_states", JointState, self._js_cb,
                          queue_size=1)
         rospy.loginfo("waiting for ground truth ...")
         while self.pose is None and not rospy.is_shutdown():
@@ -48,11 +57,37 @@ class BaseDriver(object):
         rospy.loginfo("base at (%.2f, %.2f) yaw %.1f deg",
                       self.pose[0], self.pose[1], math.degrees(self.pose[2]))
 
+    def _js_cb(self, msg):
+        for i, n in enumerate(msg.name):
+            if n.startswith("wheel_"):
+                v = msg.velocity[i] if i < len(msg.velocity) else 0.0
+                e = msg.effort[i] if i < len(msg.effort) else 0.0
+                self.wheels[n] = (v, e)
+
+    def why_stuck(self, cmd):
+        """Wheels turning or not: that is the whole question."""
+        spin = max((abs(v) for v, _ in self.wheels.values()), default=0.0)
+        rospy.logwarn("  commanded %.2f m/s, ground truth %.3f m/s, "
+                      "fastest wheel %.2f rad/s (= %.2f m/s at the rim)",
+                      cmd, self.vel[0], spin, spin * 0.16)
+        for n in sorted(self.wheels):
+            v, e = self.wheels[n]
+            rospy.logwarn("    %-16s %+7.2f rad/s  effort %+8.1f", n, v, e)
+        if spin * 0.16 > 0.05 and self.vel[0] < 0.02:
+            rospy.logwarn("  -> wheels turning, platform not moving: wedged "
+                          "or slipping, not a command problem")
+        elif spin * 0.16 <= 0.05:
+            rospy.logwarn("  -> wheels not turning: the command is not "
+                          "becoming torque")
+
     def _cb(self, msg):
         q = msg.pose.pose.orientation
         yaw = math.atan2(2.0 * (q.w * q.z + q.x * q.y),
                          1.0 - 2.0 * (q.y * q.y + q.z * q.z))
         self.pose = (msg.pose.pose.position.x, msg.pose.pose.position.y, yaw)
+        self.vel = (math.hypot(msg.twist.twist.linear.x,
+                               msg.twist.twist.linear.y),
+                    msg.twist.twist.angular.z)
 
     def stop(self):
         t = Twist()
@@ -72,13 +107,17 @@ class BaseDriver(object):
         while not rospy.is_shutdown():
             x, y, yaw = self.pose
             along = (target_y - y) * sgn
-            # both conditions: arriving at the right y while 0.25 m off the lane
-            # is not arriving. The arm's whole reach budget is spent on the
-            # 0.80 m standoff, so lane error comes straight off the margin.
-            if abs(target_y - y) < tol and abs(x - lane_x) < self.LANE_TOL:
+            # y only. Adding the lane error here made the test unsatisfiable:
+            # the platform cannot strafe, so closing a lane error means running
+            # along the row and back, and the test rejects that for being off
+            # in y. reachable() is where a wide stop actually gets judged.
+            if abs(target_y - y) < tol:
                 break
             if (rospy.Time.now() - t0).to_sec() > timeout:
-                rospy.logwarn("drive timed out at y=%.2f", y)
+                rospy.logwarn("drive timed out at y=%.2f (target %.2f, lane "
+                              "error %+.3f, yaw %.1f deg)",
+                              y, target_y, x - lane_x, math.degrees(yaw))
+                self.why_stuck(self.K_ALONG * along)
                 self.stop()
                 return False
             cross = (x - lane_x) * sgn
@@ -94,10 +133,19 @@ class BaseDriver(object):
             yaw_err = wrap((heading - sgn * aim) - yaw)
 
             t = Twist()
-            t.linear.x = max(-self.V_MAX,
-                             min(self.V_MAX, self.K_ALONG * along))
-            t.angular.z = max(-self.W_MAX,
-                              min(self.W_MAX, self.K_YAW * yaw_err))
+            v = self.K_ALONG * along
+            # Floor: a pure proportional law hands over a vanishing command as
+            # it converges, and a vanishing command loses to the steering term.
+            if abs(v) < self.V_MIN:
+                v = math.copysign(self.V_MIN, along)
+            t.linear.x = max(-self.V_MAX, min(self.V_MAX, v))
+
+            w = self.K_YAW * yaw_err
+            # Skid steer subtracts w * track/2 from the inner side. Cap w so
+            # that side never reverses while there is still ground to cover:
+            # steering that stops a wheel also stops the platform.
+            w_cap = min(self.W_MAX, abs(t.linear.x) / self.HALF_TRACK)
+            t.angular.z = max(-w_cap, min(w_cap, w))
             # Slow down only when the platform is genuinely crabbing, i.e. its
             # heading is far from the lane direction. Testing yaw_err here
             # instead would count the aim offset the controller is deliberately
@@ -110,9 +158,14 @@ class BaseDriver(object):
             rate.sleep()
         self.stop()
         x, y, yaw = self.pose
+        err = x - lane_x
         rospy.loginfo("  arrived (%.3f, %.3f) yaw %.1f deg  "
                       "[lane error %+.3f m]",
-                      x, y, math.degrees(yaw), x - lane_x)
+                      x, y, math.degrees(yaw), err)
+        if abs(err) > self.LANE_WARN:
+            rospy.logwarn("  %.2f m off the lane: the arm has about 0.07 m of "
+                          "reach margin at this standoff, so some fruit here "
+                          "will be out of range", abs(err))
         return True
 
     def excite(self, pulses=4, v=0.35, dt=0.9):
