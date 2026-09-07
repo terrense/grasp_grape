@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!-- Vineyard harvesting robot: skid-steer field platform + Dobot CR10 + a
-     shear-type cutter, plus the sensors a VINS-Mono style estimator needs.
+     laser cutting head, plus the sensors a VINS-Mono style estimator needs.
 
      Arm kinematics/inertials come from dobot_description/urdf/cr10_robot.urdf
      (Dobot-Arm/TCP-IP-ROS-6AXis). Differences from the vendor file:
@@ -8,7 +8,7 @@
        * libgazebo_ros_joint_pose_trajectory replaced by gazebo_ros_control
        * the fixed `world` joint is gone: the robot is a free body now
        * the arm sits on a wheeled platform instead of a fixed pedestal
-       * two-finger cutter on the Link6 flange
+       * laser cutting head with a catch basket on the Link6 flange
 
      Frames:
        base_footprint  ground contact point, what odometry reports
@@ -51,6 +51,8 @@
   <material name="rubber">     <color rgba="0.09 0.09 0.10 1"/></material>
   <material name="chassis_y">  <color rgba="0.72 0.55 0.10 1"/></material>
   <material name="crate_wood"> <color rgba="0.62 0.44 0.20 1"/></material>
+  <material name="laser_red">  <color rgba="0.90 0.12 0.10 1"/></material>
+  <material name="basket_grey"><color rgba="0.45 0.47 0.50 1"/></material>
 
   <!-- ===================== chassis ===================== -->
   <link name="base_footprint"/>
@@ -395,23 +397,34 @@
     <collision><geometry><mesh filename="${mesh}/Link6.STL"/></geometry></collision>
   </link>
 
-  <!-- ============ shear-type two-finger end effector ============
-       The two blades close on the peduncle (fruit stem), clamp it, and cut.
-       TCP sits at the pinch point, 95 mm ahead of the Link6 flange. -->
+  <!-- ============ laser cutting head + catch basket ============
+       No jaws: the peduncle is severed by a laser, the way laser weeders burn
+       through a stem. That removes the clamp, which is what used to hold the
+       cluster, so the head carries a basket that the bunch is already sitting
+       inside when the beam fires , it drops a few centimetres onto the floor
+       of the basket rather than to the ground.
+
+       Frame convention for the whole head: tool +Z is the approach axis (out
+       of the Link6 flange) and tool +X points downward once the wrist is
+       pitched for a cut, so the basket hangs along +X and its opening faces
+       +Z, i.e. the bunch slides in as the tool advances.
+
+       TCP stays 95 mm ahead of the flange, where the beam is focused and where
+       the cut happens, so every pose in pick_grape.py keeps its meaning. -->
   <link name="ee_base">
     <inertial>
-      <origin xyz="0 0 0.028"/>
-      <mass value="0.45"/>
-      <inertia ixx="4.0E-04" ixy="0" ixz="0" iyy="4.0E-04" iyz="0" izz="4.0E-04"/>
+      <origin xyz="0 0 0.037"/>
+      <mass value="1.20"/>
+      <inertia ixx="1.6E-03" ixy="0" ixz="0" iyy="1.6E-03" iyz="0" izz="1.6E-03"/>
     </inertial>
     <visual>
-      <origin xyz="0 0 0.028"/>
-      <geometry><box size="0.07 0.09 0.055"/></geometry>
+      <origin xyz="0 0 0.037"/>
+      <geometry><box size="0.100 0.130 0.075"/></geometry>
       <material name="dobot_dark"/>
     </visual>
     <collision>
-      <origin xyz="0 0 0.028"/>
-      <geometry><box size="0.07 0.09 0.055"/></geometry>
+      <origin xyz="0 0 0.037"/>
+      <geometry><box size="0.100 0.130 0.075"/></geometry>
     </collision>
   </link>
   <joint name="ee_joint" type="fixed">
@@ -419,6 +432,24 @@
     <parent link="Link6"/><child link="ee_base"/>
   </joint>
 
+  <!-- emitter aperture; the ray sensor is attached to this link and fires
+       along its +Z -->
+  <link name="laser_link">
+    <inertial><mass value="0.05"/>
+      <inertia ixx="1e-5" ixy="0" ixz="0" iyy="1e-5" iyz="0" izz="1e-5"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0.006" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.011" length="0.012"/></geometry>
+      <material name="laser_red"/>
+    </visual>
+  </link>
+  <joint name="laser_joint" type="fixed">
+    <origin xyz="0 0 0.075"/>
+    <parent link="ee_base"/><child link="laser_link"/>
+  </joint>
+
+  <!-- beam focus / nominal cut point -->
   <link name="tcp_link">
     <inertial><mass value="1e-4"/>
       <inertia ixx="1e-8" ixy="0" ixz="0" iyy="1e-8" iyz="0" izz="1e-8"/>
@@ -429,39 +460,61 @@
     <parent link="ee_base"/><child link="tcp_link"/>
   </joint>
 
-  <!-- q=0 -> 12 mm gap (clamped on a peduncle), q=0.042 -> 96 mm gap -->
-  <link name="left_blade">
-    <inertial><origin xyz="0 0.003 0.030"/><mass value="0.05"/>
-      <inertia ixx="2e-5" ixy="0" ixz="0" iyy="2e-5" iyz="0" izz="2e-5"/>
+  <!-- eye-in-hand RealSense, above the emitter and looking down the beam.
+       Kept separate from the mast camera on purpose: this one moves with the
+       wrist, which is what fruit detection wants and what VIO does not. -->
+  <link name="ee_camera_link">
+    <inertial><mass value="0.08"/>
+      <inertia ixx="4e-5" ixy="0" ixz="0" iyy="4e-5" iyz="0" izz="4e-5"/>
     </inertial>
-    <visual><origin xyz="0 0.003 0.030"/>
-      <geometry><box size="0.05 0.006 0.062"/></geometry><material name="steel"/></visual>
-    <collision><origin xyz="0 0.003 0.030"/>
-      <geometry><box size="0.05 0.006 0.062"/></geometry></collision>
+    <visual>
+      <geometry><box size="0.025 0.090 0.025"/></geometry>
+      <material name="dobot_dark"/>
+    </visual>
+    <collision>
+      <geometry><box size="0.025 0.090 0.025"/></geometry>
+    </collision>
   </link>
-  <joint name="left_blade_joint" type="prismatic">
-    <origin xyz="0 0.006 0.055"/>
-    <parent link="ee_base"/><child link="left_blade"/>
-    <axis xyz="0 1 0"/>
-    <limit lower="0.0" upper="0.042" effort="100" velocity="0.5"/>
-    <dynamics damping="5.0" friction="1.0"/>
+  <joint name="ee_camera_joint" type="fixed">
+    <origin xyz="-0.058 0 0.050"/>
+    <parent link="ee_base"/><child link="ee_camera_link"/>
+  </joint>
+  <link name="ee_camera_optical_frame"/>
+  <joint name="ee_camera_optical_joint" type="fixed">
+    <origin rpy="-1.5708 0 -1.5708"/>
+    <parent link="ee_camera_link"/><child link="ee_camera_optical_frame"/>
   </joint>
 
-  <link name="right_blade">
-    <inertial><origin xyz="0 -0.003 0.030"/><mass value="0.05"/>
-      <inertia ixx="2e-5" ixy="0" ixz="0" iyy="2e-5" iyz="0" izz="2e-5"/>
+  <!-- Catch basket. Open at the top (-X) and at the front (+Z) so the tool can
+       be slid over a hanging bunch; the bunch is then standing in the basket
+       before the beam is fired. Released over the crate by pitching the wrist
+       forward so it slides out of the open front. -->
+  <xacro:macro name="basket_slab" params="x y z sx sy sz">
+    <visual>
+      <origin xyz="${x} ${y} ${z}"/>
+      <geometry><box size="${sx} ${sy} ${sz}"/></geometry>
+      <material name="basket_grey"/>
+    </visual>
+    <collision>
+      <origin xyz="${x} ${y} ${z}"/>
+      <geometry><box size="${sx} ${sy} ${sz}"/></geometry>
+    </collision>
+  </xacro:macro>
+
+  <link name="catch_basket">
+    <inertial>
+      <origin xyz="0.28 0 0.09"/>
+      <mass value="0.60"/>
+      <inertia ixx="6E-03" ixy="0" ixz="0" iyy="6E-03" iyz="0" izz="6E-03"/>
     </inertial>
-    <visual><origin xyz="0 -0.003 0.030"/>
-      <geometry><box size="0.05 0.006 0.062"/></geometry><material name="steel"/></visual>
-    <collision><origin xyz="0 -0.003 0.030"/>
-      <geometry><box size="0.05 0.006 0.062"/></geometry></collision>
+    <xacro:basket_slab x="0.410" y="0"      z="0.090" sx="0.020" sy="0.240" sz="0.240"/>
+    <xacro:basket_slab x="0.275" y="0"      z="-0.030" sx="0.270" sy="0.240" sz="0.020"/>
+    <xacro:basket_slab x="0.275" y="0.120"  z="0.090" sx="0.270" sy="0.020" sz="0.240"/>
+    <xacro:basket_slab x="0.275" y="-0.120" z="0.090" sx="0.270" sy="0.020" sz="0.240"/>
   </link>
-  <joint name="right_blade_joint" type="prismatic">
-    <origin xyz="0 -0.006 0.055"/>
-    <parent link="ee_base"/><child link="right_blade"/>
-    <axis xyz="0 -1 0"/>
-    <limit lower="0.0" upper="0.042" effort="100" velocity="0.5"/>
-    <dynamics damping="5.0" friction="1.0"/>
+  <joint name="basket_joint" type="fixed">
+    <origin xyz="0 0 0"/>
+    <parent link="ee_base"/><child link="catch_basket"/>
   </joint>
 
   <!-- ============ ros_control transmissions (arm only) ============
@@ -487,8 +540,6 @@
   <xacro:pos_trans jname="joint4"/>
   <xacro:pos_trans jname="joint5"/>
   <xacro:pos_trans jname="joint6"/>
-  <xacro:pos_trans jname="left_blade_joint"/>
-  <xacro:pos_trans jname="right_blade_joint"/>
 
   <!-- ===================== gazebo ===================== -->
   <gazebo>
@@ -635,14 +686,80 @@
   <xacro:tyre_surface name="wheel_rl"/>
   <xacro:tyre_surface name="wheel_rr"/>
 
-  <!-- high friction on the blades so the clamped peduncle does not slip -->
-  <gazebo reference="left_blade">
-    <material>Gazebo/Grey</material><mu1>2.0</mu1><mu2>2.0</mu2>
+  <gazebo reference="catch_basket">
+    <material>Gazebo/Grey</material><mu1>0.9</mu1><mu2>0.9</mu2>
     <kp>1e6</kp><kd>100</kd>
   </gazebo>
-  <gazebo reference="right_blade">
-    <material>Gazebo/Grey</material><mu1>2.0</mu1><mu2>2.0</mu2>
-    <kp>1e6</kp><kd>100</kd>
+  <gazebo reference="laser_link"><material>Gazebo/RedGlow</material></gazebo>
+  <gazebo reference="ee_camera_link"><material>Gazebo/DarkGrey</material></gazebo>
+
+  <!-- ============ the cutting beam ============
+       Modelled as a Gazebo ray sensor rather than a bare geometric test. The
+       ray gives the real hit point along the beam: it is occluded by whatever
+       is actually in the way, and it reports range, so the node can tell "on
+       target at 0.21 m" from "the post is in front of the stem". A pure
+       distance check between two poses would happily cut through a trellis.
+
+       The sensor reaches further than the laser is useful for; the effective
+       cutting range is enforced in pick_grape.py (LASER_RANGE), so the node can
+       distinguish out-of-range from off-target.
+
+       A ray sensor scans its own XY plane with angle 0 along +X, so it is
+       pitched -90 deg to fire along the link's +Z, which is the approach axis.
+       Five samples across 0.7 deg give a narrow beam, about 4 mm across at the
+       working distance, instead of a single ray that can slip past a stem. -->
+  <gazebo reference="laser_link">
+    <sensor name="cut_laser" type="ray">
+      <pose>0 0 0 0 -1.5708 0</pose>
+      <always_on>true</always_on>
+      <update_rate>20.0</update_rate>
+      <visualize>true</visualize>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>5</samples>
+            <resolution>1</resolution>
+            <min_angle>-0.006</min_angle>
+            <max_angle>0.006</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.02</min>
+          <max>0.60</max>
+          <resolution>0.002</resolution>
+        </range>
+      </ray>
+      <plugin name="cut_laser_plugin" filename="libgazebo_ros_laser.so">
+        <topicName>cut_laser/scan</topicName>
+        <frameName>laser_link</frameName>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- eye-in-hand RealSense: for fruit detection later, not for VIO -->
+  <gazebo reference="ee_camera_link">
+    <sensor name="ee_rgbd" type="depth">
+      <always_on>true</always_on>
+      <update_rate>15.0</update_rate>
+      <camera>
+        <horizontal_fov>1.20</horizontal_fov>
+        <image><width>640</width><height>480</height><format>R8G8B8</format></image>
+        <clip><near>0.08</near><far>4.0</far></clip>
+      </camera>
+      <plugin name="ee_rgbd_plugin" filename="libgazebo_ros_openni_kinect.so">
+        <baseline>0.05</baseline>
+        <updateRate>15.0</updateRate>
+        <cameraName>ee_camera</cameraName>
+        <imageTopicName>color/image_raw</imageTopicName>
+        <cameraInfoTopicName>color/camera_info</cameraInfoTopicName>
+        <depthImageTopicName>depth/image_raw</depthImageTopicName>
+        <depthImageCameraInfoTopicName>depth/camera_info</depthImageCameraInfoTopicName>
+        <pointCloudTopicName>depth/points</pointCloudTopicName>
+        <frameName>ee_camera_optical_frame</frameName>
+        <pointCloudCutoff>0.10</pointCloudCutoff>
+        <pointCloudCutoffMax>4.0</pointCloudCutoffMax>
+      </plugin>
+    </sensor>
   </gazebo>
 
 </robot>

@@ -23,8 +23,11 @@ from moveit_msgs.msg import RobotState
 from sensor_msgs.msg import JointState
 
 LINK_R = 0.09          # generous allowance for CR10 link cross-section
+# the catch basket is the widest thing on the head and hangs 0.4 m below
+# the tool, so it dominates the stowed envelope and has to be in here
 ARM_LINKS = ["Link1", "Link2", "Link3", "Link4", "Link5", "Link6",
-             "ee_base", "left_blade", "right_blade", "tcp_link"]
+             "ee_base", "laser_link", "tcp_link", "ee_camera_link",
+             "catch_basket"]
 JOINTS = ["joint1", "joint2", "joint3", "joint4", "joint5", "joint6"]
 
 # Half-width the stowed arm may occupy, measured from base_link.

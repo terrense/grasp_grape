@@ -35,21 +35,3 @@ arm_controller:
   stop_trajectory_duration: 0.3
   state_publish_rate: 50
   action_monitor_rate: 20
-
-gripper_controller:
-  type: position_controllers/JointTrajectoryController
-  joints: [left_blade_joint, right_blade_joint]
-  constraints:
-    goal_time: 2.0
-    # 0 disables the check. gazebo_ros_control drives these joints with
-    # Joint::SetPosition (no PID gains are given), so the velocity Gazebo
-    # reports never settles cleanly to zero and this tolerance -- which
-    # joint_trajectory_controller folds into the *goal* tolerance as its
-    # velocity component -- aborts every trajectory with a misleading
-    # "goal error" message quoting the (tiny) position error instead.
-    stopped_velocity_tolerance: 0.0
-    left_blade_joint:  {trajectory: 0.05, goal: 0.01}
-    right_blade_joint: {trajectory: 0.05, goal: 0.01}
-  stop_trajectory_duration: 0.2
-  state_publish_rate: 50
-  action_monitor_rate: 20

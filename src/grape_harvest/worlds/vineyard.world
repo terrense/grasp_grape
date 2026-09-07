@@ -24,6 +24,7 @@
     <include><uri>model://trellis</uri><pose>0 0 0 0 0 0</pose></include>
     <include><uri>model://dirt_track</uri><pose>0 0 0 0 0 0</pose></include>
     <include><uri>model://polytunnel</uri><pose>0 0 0 0 0 0</pose></include>
+    <include><uri>model://start_pad</uri><pose>0 0 0 0 0 0</pose></include>
 
     <!-- Creates/removes fixed joints between links at runtime. Per cluster the
          demo uses it three times: hang it on the wire, clamp it in the cutter,

@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <model name="start_pad">
+    <static>true</static>
+    <link name="link">
+      <visual name="pad">
+        <pose>1.2000 -5.2000 0.0040 0 0 1.5708</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>1.600 1.600 0.008</size></box></geometry>
+        <material><ambient>0.78 0.78 0.74 1</ambient><diffuse>0.78 0.78 0.74 1</diffuse></material>
+      </visual>
+      <visual name="cross_x">
+        <pose>1.2000 -5.2000 0.0060 0 0 1.5708</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>1.440 0.060 0.008</size></box></geometry>
+        <material><ambient>0.80 0.12 0.10 1</ambient><diffuse>0.80 0.12 0.10 1</diffuse></material>
+      </visual>
+      <visual name="cross_y">
+        <pose>1.2000 -5.2000 0.0060 0 0 1.5708</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>0.060 1.440 0.008</size></box></geometry>
+        <material><ambient>0.80 0.12 0.10 1</ambient><diffuse>0.80 0.12 0.10 1</diffuse></material>
+      </visual>
+      <visual name="arrow">
+        <pose>1.2000 -4.7600 0.0060 0 0 1.5708</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>0.100 0.400 0.008</size></box></geometry>
+        <material><ambient>0.10 0.35 0.80 1</ambient><diffuse>0.10 0.35 0.80 1</diffuse></material>
+      </visual>
+      <visual name="arrow_l">
+        <pose>1.0900 -4.5600 0.0060 0 0 1.5708</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>0.220 0.090 0.008</size></box></geometry>
+        <material><ambient>0.10 0.35 0.80 1</ambient><diffuse>0.10 0.35 0.80 1</diffuse></material>
+      </visual>
+      <visual name="arrow_r">
+        <pose>1.3100 -4.5600 0.0060 0 0 1.5708</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>0.220 0.090 0.008</size></box></geometry>
+        <material><ambient>0.10 0.35 0.80 1</ambient><diffuse>0.10 0.35 0.80 1</diffuse></material>
+      </visual>
+      <visual name="corner_0">
+        <pose>0.5760 -5.8240 0.0060 0 0 1.5708</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>0.220 0.220 0.008</size></box></geometry>
+        <material><ambient>0.12 0.12 0.12 1</ambient><diffuse>0.12 0.12 0.12 1</diffuse></material>
+      </visual>
+      <visual name="corner_1">
+        <pose>0.5760 -4.5760 0.0060 0 0 1.5708</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>0.220 0.220 0.008</size></box></geometry>
+        <material><ambient>0.12 0.12 0.12 1</ambient><diffuse>0.12 0.12 0.12 1</diffuse></material>
+      </visual>
+      <visual name="corner_2">
+        <pose>1.8240 -5.8240 0.0060 0 0 1.5708</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>0.220 0.220 0.008</size></box></geometry>
+        <material><ambient>0.12 0.12 0.12 1</ambient><diffuse>0.12 0.12 0.12 1</diffuse></material>
+      </visual>
+      <visual name="corner_3">
+        <pose>1.8240 -4.5760 0.0060 0 0 1.5708</pose>
+        <cast_shadows>false</cast_shadows>
+        <geometry><box><size>0.220 0.220 0.008</size></box></geometry>
+        <material><ambient>0.12 0.12 0.12 1</ambient><diffuse>0.12 0.12 0.12 1</diffuse></material>
+      </visual>
+    </link>
+  </model>
+</sdf>

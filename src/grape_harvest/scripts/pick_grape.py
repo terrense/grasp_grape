@@ -6,13 +6,17 @@ is abreast of the column, unstow, cut it into the deck crate, stow, move on.
 
 The cut cycle itself:
 
-    approach standoff -> descend onto the peduncle -> close blades (clamp)
-    -> cut (stem joint released, cluster handed to the cutter) -> retreat
-    -> carry to its slot in the deck crate -> open (release)
+    approach standoff -> slide the basket over the bunch -> fire the laser
+    -> cut (stem joint released, cluster handed to the head) -> retreat
+    -> carry to its slot in the deck crate -> tip the basket out
 
-"Cutting" is modelled with gazebo_ros_link_attacher: a cluster hangs off its
-row's cordon by a runtime fixed joint; the cut attaches it to the robot flange
-and *then* removes the cordon joint, so the fruit is never in free fall.
+Severing is modelled in two halves. A Gazebo ray sensor on the head reports
+what the beam is hitting and how far off it is, and the cut only happens if
+the beam holds on the stem inside its effective range for LASER_DWELL
+seconds. The mechanical consequence goes through gazebo_ros_link_attacher: a
+cluster hangs off its row's cordon by a runtime fixed joint, and the cut
+attaches it to the head *before* removing the cordon joint, so the fruit is
+never in free fall.
 
 Why one stop per cluster and why the lane hugs the row
 -----------------------------------------------------
@@ -66,6 +70,7 @@ from std_srvs.srv import Empty
 from gazebo_msgs.msg import ModelStates
 from gazebo_msgs.srv import SpawnModel
 from gazebo_ros_link_attacher.srv import Attach, AttachRequest
+from sensor_msgs.msg import LaserScan
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from make_models import (POST_H, PANEL_W, PANELS_PER_ROW, N_ROWS, ROW_LEN,
@@ -83,8 +88,28 @@ BUNCH_LINK = "bunch_link"
 APPROACH = 0.15                    # standoff along the tool axis, metres
 RETREAT = 0.18
 
-BLADE_OPEN = 0.042
-BLADE_CLOSED = 0.002               # slight squeeze on the 12 mm peduncle
+# ------------------------------------------------------------------ laser
+# The head has no jaws. A ray sensor on laser_link reports what the beam is
+# actually hitting and how far away it is, and the cut is modelled as holding
+# that beam on the target for LASER_DWELL seconds -- energy delivered, not a
+# geometric assertion. LASER_RANGE is the effective cutting distance; the
+# sensor itself sees further (0.60 m) so the node can tell "on target but too
+# far" from "nothing in the beam".
+LASER_TOPIC = "cut_laser/scan"
+LASER_RANGE = 0.35                 # effective cutting distance, metres
+LASER_DWELL = 1.5                  # seconds on target to sever a peduncle
+LASER_SETTLE = 0.4                 # let the arm stop ringing before firing
+
+# Where the bunch ends up once it is cut: standing on the floor of the catch
+# basket. The basket floor is 0.41 m along tool +X from the TCP (see the xacro),
+# and tool +X points down while cutting.
+BASKET_FLOOR_X = 0.40
+
+# Dumping attitude. tool_quat is Rz(az)*Ry(90+pitch); the basket runs along
+# tool +X and is open at -X (top) and +Z (front), so tipping it out means
+# rolling the wrist until +X points up. pitch = -160 deg puts the X column's
+# world z at +0.94, i.e. the basket is upside down over the crate.
+DUMP_PITCH = math.radians(-160.0)
 
 CRATE_T = 0.014                    # crate floor thickness, matches the xacro
 CRATE_FLOOR_Z = CRATE_BASE_XYZ[2] + CRATE_T
@@ -117,8 +142,8 @@ PITCH = math.radians(20.0)
 def tool_quat(azimuth, pitch=PITCH):
     """Cutter pointing outward from the arm column and tilted down by `pitch`.
 
-    Tool +Z is the approach axis (out of the Link6 flange) and the blades
-    separate along tool +/-Y, so the blades close across a vertical peduncle.
+    Tool +Z is the approach axis (out of the Link6 flange); the beam fires
+    along it and the catch basket hangs along tool +X, which points down.
 
     The sign of the Y rotation matters: -90 deg puts the approach axis at
     (-1,0,0), which still solves for IK but makes the wrist reach *past* the
@@ -137,10 +162,10 @@ def approach_axis(azimuth, pitch=PITCH):
             -math.sin(pitch))
 
 
-def pose_at(x, y, z, azimuth):
+def pose_at(x, y, z, azimuth, pitch=PITCH):
     p = Pose()
     p.position.x, p.position.y, p.position.z = x, y, z
-    p.orientation = tool_quat(azimuth)
+    p.orientation = tool_quat(azimuth, pitch)
     return p
 
 
@@ -157,14 +182,15 @@ class GrapeHarvester(object):
         self.robot = moveit_commander.RobotCommander()
         self.scene = moveit_commander.PlanningSceneInterface(synchronous=True)
         self.arm = moveit_commander.MoveGroupCommander("arm")
-        self.grip = moveit_commander.MoveGroupCommander("gripper")
 
         self.arm.set_planning_time(20.0)
         self.arm.set_num_planning_attempts(12)
         self.arm.set_goal_position_tolerance(0.003)
         self.arm.set_goal_orientation_tolerance(0.02)
-        self.grip.set_max_velocity_scaling_factor(0.5)
         self.set_speed(0.35)
+
+        self.beam = None            # latest LaserScan from the cutting head
+        rospy.Subscriber(LASER_TOPIC, LaserScan, self._beam_cb, queue_size=1)
 
         self.planning_frame = self.arm.get_planning_frame()
 
@@ -188,6 +214,54 @@ class GrapeHarvester(object):
     def set_speed(self, f):
         self.arm.set_max_velocity_scaling_factor(f)
         self.arm.set_max_acceleration_scaling_factor(f)
+
+    # ---------------------------------------------------------------- laser
+    def _beam_cb(self, msg):
+        self.beam = msg
+
+    def beam_range(self):
+        """Closest thing the beam is touching, or None if it is pointing at
+        nothing inside the sensor's range."""
+        if self.beam is None:
+            return None
+        good = [r for r in self.beam.ranges
+                if self.beam.range_min < r < self.beam.range_max]
+        return min(good) if good else None
+
+    def fire(self, name):
+        """Hold the beam on the peduncle long enough to sever it.
+
+        Returns True if the beam stayed on something inside LASER_RANGE for
+        LASER_DWELL seconds. This is what replaces closing the jaws: there is
+        nothing to grip with, so the only question is whether the beam is
+        actually landing on the stem, and the ray sensor answers it against the
+        real scene rather than against an assumed pose.
+        """
+        rospy.sleep(LASER_SETTLE)
+        d = self.beam_range()
+        if d is None:
+            rospy.logerr("  laser sees nothing in the beam; not firing")
+            return False
+        if d > LASER_RANGE:
+            rospy.logerr("  target at %.3f m is beyond the %.2f m effective "
+                         "range; not firing", d, LASER_RANGE)
+            return False
+
+        rospy.loginfo("  laser ON, target at %.3f m, dwelling %.1f s",
+                      d, LASER_DWELL)
+        t0 = rospy.Time.now()
+        rate = rospy.Rate(20)
+        while (rospy.Time.now() - t0).to_sec() < LASER_DWELL:
+            if rospy.is_shutdown():
+                return False
+            d = self.beam_range()
+            if d is None or d > LASER_RANGE:
+                rospy.logwarn("  beam came off %s at %.1f s; aborting the cut",
+                              name, (rospy.Time.now() - t0).to_sec())
+                return False
+            rate.sleep()
+        rospy.loginfo("  laser OFF, %s severed", name)
+        return True
 
     # -------------------------------------------------------------- frames
     def _mat(self, target, source, timeout=5.0):
@@ -257,7 +331,11 @@ class GrapeHarvester(object):
 
         rx, ry, rz = self.base_to_world(bx, by, bz)
         ox, oy, oz = self.base_to_world(bx, by, bz + 0.12)
-        return pose_at(ox, oy, oz, az), pose_at(rx, ry, rz, az)
+        # The release pose is flipped: with no jaws to open, the only way to let
+        # go is to turn the basket over. Approach the crate the normal way up,
+        # then invert for the drop.
+        return (pose_at(ox, oy, oz, az),
+                pose_at(rx, ry, rz, az, pitch=DUMP_PITCH))
 
     def reachable(self, spec):
         """Straight-line distance from the arm base to the grasp point.
@@ -362,7 +440,7 @@ class GrapeHarvester(object):
 
         Deliberately not included: the fruiting wires (4 mm radius, just above
         the grasp points -- adding them only produces spurious planning
-        failures), the peduncles, which the blades are supposed to close on,
+        failures), the peduncles, which the beam is supposed to land on,
         and the polytunnel. The tunnel is a single span with its uprights only
         along the two outer edges, and the nearest one is 1.8 m from the
         nearest working lane against a 1.3 m arm, so it cannot be hit; its arch
@@ -382,7 +460,7 @@ class GrapeHarvester(object):
                       0.02, ROW_LEN, 0.02)
 
         # berry bodies only -- the top of each body sits pedu_len below its
-        # row's cordon, so the blades never have to plan through it
+        # row's cordon, so the head never has to plan through it
         for spec in specs:
             self._cyl(spec["name"], spec["x"], spec["y"],
                       spec["cordon_z"] - spec["pedu_len"]
@@ -423,14 +501,6 @@ class GrapeHarvester(object):
         rospy.loginfo("  %s added to the crate contents", name)
 
     # ------------------------------------------------------------- motions
-    def gripper(self, q, what):
-        rospy.loginfo("gripper -> %s (%.3f m)", what, q)
-        self.grip.set_joint_value_target({"left_blade_joint": q,
-                                          "right_blade_joint": q})
-        ok = self.grip.go(wait=True)
-        self.grip.stop()
-        return ok
-
     def go_named(self, name):
         rospy.loginfo("arm -> named pose %s", name)
         self.arm.set_start_state_to_current_state()
@@ -551,7 +621,6 @@ class GrapeHarvester(object):
         rospy.sleep(0.3)
         self.scene.remove_world_object(name)
         self._att(self.detach, ROBOT_MODEL, ROBOT_EE_LINK, name, BUNCH_LINK)
-        self.gripper(BLADE_OPEN, "open")
         rospy.sleep(0.5)
 
     def harvest(self, spec, slot):
@@ -562,8 +631,6 @@ class GrapeHarvester(object):
                       name, spec["x"], spec["y"], spec["grasp_z"])
 
         self.set_speed(0.35)
-        if not self.gripper(BLADE_OPEN, "open"):
-            return False
         if not self.go_pose(pre, "%s pre_grasp" % name):
             return False
 
@@ -578,13 +645,16 @@ class GrapeHarvester(object):
         if not self.go_cartesian(grasp, "%s grasp" % name):
             return False
 
-        rospy.loginfo("--- clamp + cut ---")
-        self.gripper(BLADE_CLOSED, "closed")
-        rospy.sleep(0.4)
-        # hand the cluster to the cutter *before* releasing the stem
+        rospy.loginfo("--- laser cut ---")
+        if not self.fire(name):
+            # nothing has been cut, so the cluster is still on the vine and
+            # there is nothing to put down: a plain failure, not an abandon
+            return False
+        # hand the cluster to the head *before* releasing the stem, so it never
+        # free-falls out of the basket
         r1 = self._att(self.attach, ROBOT_MODEL, ROBOT_EE_LINK, name,
                        BUNCH_LINK)
-        rospy.loginfo("  clamped in cutter (ok=%s)", r1.ok)
+        rospy.loginfo("  held in the basket (ok=%s)", r1.ok)
         r2 = self._att(self.detach, TRELLIS_MODEL,
                        "wire_r%d_fruit" % spec["row"], name, BUNCH_LINK)
         rospy.loginfo("  stem cut (ok=%s)", r2.ok)
@@ -610,8 +680,11 @@ class GrapeHarvester(object):
         #
         # The cross-section is oversized to absorb the PITCH-induced
         # misalignment -- collision padding, not a fruit model.
-        held.pose.position.x = (spec["hang_below_tcp"]
-                                - spec["body_len"] / 2.0)
+        # once cut it is standing on the basket floor, not swinging from a
+        # stem, so clamp it to the floor rather than to where it hung
+        held.pose.position.x = min(spec["hang_below_tcp"]
+                                   - spec["body_len"] / 2.0,
+                                   BASKET_FLOOR_X - spec["body_len"] / 2.0)
         held.pose.orientation.w = 1.0
         # Link2..Link6 are all in touch_links, and the cross-section padding is
         # small, because of how this arm has to stand to reach 1.4-1.7 m fruit:
@@ -635,7 +708,8 @@ class GrapeHarvester(object):
             size=(spec["body_len"] + 0.02,
                   2 * spec["r_top"] + 0.02, 2 * spec["r_top"] + 0.02),
             touch_links=["Link6", "Link5", "Link4", "Link3", "Link2",
-                         "ee_base", "left_blade", "right_blade", "tcp_link"])
+                         "ee_base", "laser_link", "tcp_link",
+                         "ee_camera_link", "catch_basket"])
         rospy.sleep(0.5)
 
         # Carrying the clamped cluster: slower, so the extra rigid constraint
@@ -662,8 +736,7 @@ class GrapeHarvester(object):
         self.scene.remove_world_object(name)
         r3 = self._att(self.detach, ROBOT_MODEL, ROBOT_EE_LINK, name,
                        BUNCH_LINK)
-        rospy.loginfo("  released into crate (ok=%s)", r3.ok)
-        self.gripper(BLADE_OPEN, "open")
+        rospy.loginfo("  tipped out into the crate (ok=%s)", r3.ok)
         rospy.sleep(1.5)
         self.add_settled_cluster(spec)
 

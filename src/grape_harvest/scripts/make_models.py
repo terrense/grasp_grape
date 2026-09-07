@@ -59,6 +59,16 @@ POST_H = 2.30
 # on the far side of the narrowest aisle.
 LANE_STANDOFF = 0.80
 
+# ------------------------------------------------------------- start pose
+# Every run begins here, and the spot is painted on the ground. VINS-Mono
+# initialises its own frame wherever it is switched on, so a fixed, marked
+# start is what makes two runs comparable -- and makes a drifted estimate
+# obvious by eye. launch/vineyard_gazebo.launch must agree with these.
+START_X = None          # filled in below, once lane_x() exists
+START_Y = -5.20
+START_YAW = 1.5708      # facing +y, down the lane
+PAD_SIZE = 1.60
+
 # Harvest crate rides on the platform. Expressed in the robot base_link frame:
 # floor centre on the rear deck, plus the inner size and the drop slots.
 CRATE_BASE_XYZ = (-0.52, 0.0, 0.47)
@@ -106,6 +116,11 @@ def lane_x(i):
     Offset to the -x side of the row, LANE_STANDOFF away, not the aisle centre.
     """
     return round(row_x(i) - LANE_STANDOFF, 3)
+
+
+def start_pose():
+    """(x, y, yaw) the robot is spawned at: on row 0's lane, south of the block."""
+    return (lane_x(0), START_Y, START_YAW)
 
 
 def aisle_x(k):
@@ -490,6 +505,55 @@ def greenhouse():
 """ % ("".join(parts), "".join(film))
 
 
+# ----------------------------------------------------------------- start pad
+def start_pad():
+    """A painted datum square at the spawn point.
+
+    Visual only: it is paint, and giving it collision geometry would put a
+    2 cm lip under the wheels at the exact moment VIO is initialising. The
+    cross marks the base_footprint origin and the arrow points along the
+    start heading, so a photograph of the first frame is enough to check the
+    robot really did start where the estimator thinks it did.
+    """
+    x, y, yaw = start_pose()
+    h = PAD_SIZE / 2.0
+    parts = []
+
+    def slab(name, dx, dy, sx, sy, rgb, z=0.004):
+        parts.append(
+            "\n      <visual name=\"%s\">"
+            "\n        <pose>%.4f %.4f %.4f 0 0 %.4f</pose>"
+            "\n        <cast_shadows>false</cast_shadows>"
+            "\n        <geometry><box><size>%.3f %.3f 0.008</size></box></geometry>"
+            "\n        <material><ambient>%s 1</ambient><diffuse>%s 1</diffuse></material>"
+            "\n      </visual>"
+            % (name, x + dx, y + dy, z, yaw, sx, sy, rgb, rgb))
+
+    # base square
+    slab("pad", 0, 0, PAD_SIZE, PAD_SIZE, "0.78 0.78 0.74")
+    # cross on the origin
+    slab("cross_x", 0, 0, PAD_SIZE * 0.9, 0.06, "0.80 0.12 0.10", 0.006)
+    slab("cross_y", 0, 0, 0.06, PAD_SIZE * 0.9, "0.80 0.12 0.10", 0.006)
+    # heading arrow along +y
+    slab("arrow", 0, h * 0.55, 0.10, h * 0.5, "0.10 0.35 0.80", 0.006)
+    slab("arrow_l", -0.11, h * 0.80, 0.22, 0.09, "0.10 0.35 0.80", 0.006)
+    slab("arrow_r", 0.11, h * 0.80, 0.22, 0.09, "0.10 0.35 0.80", 0.006)
+    # corner blocks, so the pad reads as a fiducial rather than a puddle
+    for i, (sx, sy) in enumerate(((-1, -1), (-1, 1), (1, -1), (1, 1))):
+        slab("corner_%d" % i, sx * h * 0.78, sy * h * 0.78, 0.22, 0.22,
+             "0.12 0.12 0.12", 0.006)
+
+    return """<?xml version="1.0"?>
+<sdf version="1.6">
+  <model name="start_pad">
+    <static>true</static>
+    <link name="link">%s
+    </link>
+  </model>
+</sdf>
+""" % "".join(parts)
+
+
 # ------------------------------------------------------------------- terrain
 def terrain():
     """Clods and ruts scattered down the aisles.
@@ -585,6 +649,7 @@ def world():
     <include><uri>model://trellis</uri><pose>0 0 0 0 0 0</pose></include>
     <include><uri>model://dirt_track</uri><pose>0 0 0 0 0 0</pose></include>
     <include><uri>model://polytunnel</uri><pose>0 0 0 0 0 0</pose></include>
+    <include><uri>model://start_pad</uri><pose>0 0 0 0 0 0</pose></include>
 
     <!-- Creates/removes fixed joints between links at runtime. Per cluster the
          demo uses it three times: hang it on the wire, clamp it in the cutter,
@@ -673,6 +738,8 @@ if __name__ == "__main__":
     write("dirt_track", terrain(), "Clods and ruts down the aisles")
     write("polytunnel", greenhouse(),
           "Single-span steel-hoop polytunnel over the whole block")
+    write("start_pad", start_pad(),
+          "Painted datum square at the fixed run start pose")
 
     os.makedirs(WORLDS, exist_ok=True)
     with open(os.path.join(WORLDS, "vineyard.world"), "w") as f:
@@ -702,6 +769,9 @@ if __name__ == "__main__":
     print("polytunnel    x %.2f..%.2f (%.1f m span), y %.2f..%.2f, "
           "ridge %.2f m" % (x0, x1, x1 - x0, y0, y1,
                             TUNNEL_LEG_H + TUNNEL_RISE))
+    sx, sy, syaw = start_pose()
+    print("start pose    x=%.2f y=%.2f yaw=%.4f  (painted pad %.1f m square)"
+          % (sx, sy, syaw, PAD_SIZE))
     print("%d clusters total" % len(b))
     for r in range(N_ROWS):
         per = [len([x for x in b if x["row"] == r and x["panel"] == p])
