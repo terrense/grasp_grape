@@ -138,7 +138,19 @@ class BaseDriver(object):
             # run ended up 0.92 m off lane and wedged in the vine row.
             aim = math.atan(self.K_LOOK * cross)
             aim = max(-self.AIM_MAX, min(self.AIM_MAX, aim))
-            yaw_err = wrap((heading - sgn * aim) - yaw)
+            # heading + aim, not heading - sgn*aim. sgn is already inside
+            # cross, and applying it twice inverted the correction whenever the
+            # platform faced +y -- which is the whole row. The lane error then
+            # grew every stop instead of closing: measured -0.021, -0.035,
+            # -0.166, -1.049, -2.228 m over consecutive stops, ending with the
+            # platform pointing backwards.
+            #
+            # yaw is CCW from +x. Facing +y and left of the lane (x < lane_x),
+            # the platform has to turn clockwise to get back, so the target
+            # heading must drop below pi/2. cross < 0 there, so aim < 0, and
+            # heading + aim is exactly that. Facing -y the signs flip twice and
+            # it still holds.
+            yaw_err = wrap((heading + aim) - yaw)
 
             t = Twist()
             v = self.K_ALONG * along
