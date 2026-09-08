@@ -106,6 +106,26 @@ class BaseDriver(object):
                    tol=0.05, timeout=180.0):
         """Drive along the aisle to world y=target_y, holding x=lane_x."""
         rospy.loginfo("drive -> y=%+.2f (lane x=%+.2f)", target_y, lane_x)
+
+        # Point at the lane before running along it. The controller below aims
+        # at a heading and closes the gap while driving forward, with the
+        # angular rate capped so steering never stops a wheel; from a large
+        # heading error that is very slow and from a reversed one it does not
+        # converge at all. Measured: the arm shoved the platform 0.364 m during
+        # a pick (its own wheels stopped), and the heading it was left with
+        # stuck near -124 deg through four consecutive drives while the
+        # platform walked 20 m off the lane.
+        #
+        # 0.35 rad is where the crabbing check below already throttles to a
+        # third speed, so past that point turning in place is strictly faster
+        # than crawling sideways.
+        _, _, yaw0 = self.pose
+        if abs(wrap(heading - yaw0)) > 0.35:
+            rospy.logwarn("  heading is %.0f deg off the lane; turning to face "
+                          "it before driving",
+                          math.degrees(abs(wrap(heading - yaw0))))
+            self.face_heading(heading)
+
         t0 = rospy.Time.now()
         rate = rospy.Rate(20)
 

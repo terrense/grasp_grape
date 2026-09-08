@@ -62,9 +62,10 @@ import tf.transformations as tft
 from geometry_msgs.msg import Pose, PoseStamped, Quaternion
 
 import moveit_commander
-from moveit_msgs.msg import PlanningSceneComponents
+from moveit_msgs.msg import PlanningScene, PlanningSceneComponents
 from moveit_msgs.srv import (GetPositionIK, GetPositionIKRequest,
-                             GetPlanningScene, GetPlanningSceneRequest)
+                             GetPlanningScene, GetPlanningSceneRequest,
+                             GetStateValidity, GetStateValidityRequest)
 
 from std_srvs.srv import Empty
 from gazebo_msgs.msg import ModelState, ModelStates
@@ -244,6 +245,8 @@ class GrapeHarvester(object):
         rospy.wait_for_service("/get_planning_scene", timeout=60.0)
         self.get_scene = rospy.ServiceProxy("/get_planning_scene",
                                             GetPlanningScene)
+        self.scene_pub = rospy.Publisher("/planning_scene", PlanningScene,
+                                         queue_size=1)
 
         self.slots_used = 0
         self.in_scene = set()
@@ -734,6 +737,30 @@ class GrapeHarvester(object):
         rospy.sleep(1.0)
         rospy.loginfo("planning scene: %d objects", len(self.in_scene))
 
+    def base_xy(self):
+        """Vehicle position from ground truth, or None."""
+        p = self.model_pose(ROBOT_MODEL)
+        return None if p is None else (p.position.x, p.position.y)
+
+    def report_base_shift(self, name):
+        """How far the platform moved while the arm was working.
+
+        It should not have moved at all -- the wheels are stopped and nothing
+        commands it. Anything here is the arm pushing off something, which
+        under kinematic joints it can do with unlimited force.
+        """
+        was = getattr(self, "_base_at_pick", None)
+        now = self.base_xy()
+        if was is None or now is None:
+            return
+        dx, dy = now[0] - was[0], now[1] - was[1]
+        d = math.sqrt(dx * dx + dy * dy)
+        if d < 0.02:
+            return
+        rospy.logwarn("  the platform moved %.3f m during %s "
+                      "(dx %+.3f, dy %+.3f) -- the wheels were stopped, so "
+                      "the arm pushed off something", d, name, dx, dy)
+
     def add_settled_cluster(self, spec):
         """Re-add a released cluster where it actually came to rest.
 
@@ -781,14 +808,99 @@ class GrapeHarvester(object):
         rospy.loginfo("  %s added to the crate contents", name)
 
     # ------------------------------------------------------------- motions
-    def go_named(self, name):
+    # The two arm links measured brushing the crate rim while the tool is
+    # down inside it. Link1 against the crate is already exempt in the SRDF.
+    CRATE_BRUSH_LINKS = ("Link2", "Link3")
+
+    def allow_crate_contact(self, on):
+        """Turn collision checking against the crate on or off for the arm.
+
+        Scoped to the crate phase by the caller. Measured penetration when the
+        arm is placing fruit is about 3 mm -- the forearm clipping the rim of a
+        plastic crate on its own vehicle -- and refusing to plan out of it is
+        what ends the row run. Everything else, the vine included, keeps
+        checking normally.
+        """
+        try:
+            req = GetPlanningSceneRequest()
+            req.components.components = (
+                PlanningSceneComponents.ALLOWED_COLLISION_MATRIX)
+            acm = self.get_scene(req).scene.allowed_collision_matrix
+            names = list(acm.entry_names)
+            if "crate_link" not in names:
+                return
+            j = names.index("crate_link")
+            touched = 0
+            for link in self.CRATE_BRUSH_LINKS:
+                if link not in names:
+                    continue
+                i = names.index(link)
+                acm.entry_values[i].enabled[j] = on
+                acm.entry_values[j].enabled[i] = on
+                touched += 1
+            if not touched:
+                return
+            ps = PlanningScene()
+            ps.is_diff = True
+            ps.allowed_collision_matrix = acm
+            self.scene_pub.publish(ps)
+            rospy.sleep(0.3)
+            rospy.loginfo("  crate contact %s for %s",
+                          "allowed" if on else "checked again",
+                          ", ".join(self.CRATE_BRUSH_LINKS))
+        except Exception as e:
+            rospy.logwarn("  could not adjust the crate collision pair: %s", e)
+
+    def why_invalid(self, label):
+        """Name the pair that is in collision, instead of guessing.
+
+        move_group reports a rejected plan as "seems to be invalid (possibly
+        due to postprocessing)" and never says what it hit.
+        /check_state_validity does say, for the state the arm is actually in.
+        """
+        try:
+            rospy.wait_for_service("/check_state_validity", timeout=5.0)
+            sv = rospy.ServiceProxy("/check_state_validity", GetStateValidity)
+            req = GetStateValidityRequest()
+            req.robot_state = self.current_state()
+            req.group_name = "arm"
+            res = sv(req)
+        except Exception as e:
+            rospy.logwarn("  could not check state validity: %s", e)
+            return
+        if res.valid:
+            rospy.logwarn("  %s: the start state is collision free, so the "
+                          "rejected plan collides somewhere along its length, "
+                          "not at the start", label)
+            return
+        deepest = {}
+        for c in res.contacts:
+            k = "%s <-> %s" % (c.contact_body_1, c.contact_body_2)
+            deepest[k] = max(deepest.get(k, 0.0), c.depth)
+        if not deepest:
+            rospy.logwarn("  %s: start state invalid but no contact pair "
+                          "reported", label)
+            return
+        # 1 cm of link padding on each side, so anything under about 20 mm is
+        # two links passing close rather than interfering.
+        rospy.logwarn("  %s: start state is IN COLLISION: %s", label,
+                      "; ".join("%s %.1f mm deep" % (k, v * 1000)
+                                for k, v in sorted(deepest.items(),
+                                                   key=lambda kv: -kv[1])))
+
+    def go_named(self, name, tries=3):
         rospy.loginfo("arm -> named pose %s", name)
-        self.arm.set_start_state_to_current_state()
-        self.arm.set_named_target(name)
-        ok = self.arm.go(wait=True)
-        self.arm.stop()
-        self.arm.clear_pose_targets()
-        return ok
+        for attempt in range(1, tries + 1):
+            self.arm.set_start_state_to_current_state()
+            self.arm.set_named_target(name)
+            ok = self.arm.go(wait=True)
+            self.arm.stop()
+            self.arm.clear_pose_targets()
+            if ok:
+                return True
+            if attempt == tries:
+                self.why_invalid("named pose %s" % name)
+        return False
 
     def current_state(self):
         """Robot state *including* whatever is attached to the cutter.
@@ -917,6 +1029,10 @@ class GrapeHarvester(object):
         with a phantom cluster welded to the flange. That is what turned one
         failed retreat into three in the first run of this code.
         """
+        # abandon can fire from inside the crate phase, which has the
+        # crate pair open; close it again rather than leaving the arm free to
+        # plan through the crate for the rest of the run
+        self.allow_crate_contact(False)
         name = spec["name"]
         rospy.logwarn("  abandoning %s: releasing it where the arm stands",
                       name)
@@ -930,6 +1046,7 @@ class GrapeHarvester(object):
         name = spec["name"]
         pre, grasp, post = self.vine_poses(spec)
         over, release = self.crate_poses(slot, spec["hang_below_tcp"])
+        self._base_at_pick = self.base_xy()
         rospy.loginfo("########### harvesting %s  (%.2f, %.2f, %.2f) #######",
                       name, spec["x"], spec["y"], spec["grasp_z"])
 
@@ -1035,6 +1152,7 @@ class GrapeHarvester(object):
             return False
 
         rospy.loginfo("--- carry to crate slot %d ---", slot)
+        self.allow_crate_contact(True)
         if not self.go_pose(over, "%s over_crate" % name):
             self.abandon(spec)
             return False
@@ -1063,6 +1181,7 @@ class GrapeHarvester(object):
         r4 = self._att(self.attach, ROBOT_MODEL, VEHICLE_BODY, name,
                        BUNCH_LINK)
         rospy.loginfo("  riding in the crate (ok=%s)", r4.ok)
+        self.report_base_shift(name)
 
         # Lift clear first, THEN tell the planner about the fruit that is now
         # lying in the crate. Doing it the other way round drops a collision
@@ -1072,6 +1191,7 @@ class GrapeHarvester(object):
         self.set_speed(0.35)
         if not self.go_pose(over, "%s clear of crate" % name):
             rospy.logwarn("  could not lift clear of the crate")
+        self.allow_crate_contact(False)
         self.add_settled_cluster(spec)
         return True
 
