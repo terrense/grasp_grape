@@ -1,0 +1,87 @@
+# ==================== TORQUE CONTROL (not the default) ====================
+#
+# Status: works, not yet tuned well enough to run the harvest.
+#
+#   what it fixes   the joints are driven by torque instead of having angles
+#                   written into the physics engine, so contact forces, load
+#                   bias and tracking error become real quantities. Under the
+#                   default setup they are all meaningless: the joints are
+#                   infinitely stiff, tracking error is always zero, and a
+#                   contact comes back as a rigid impulse.
+#   where it stands the arm holds itself, stays inside its limits, and reaches
+#                   a commanded Cartesian pose to about 17 mm. Named poses
+#                   still settle ~0.10 rad out and the controller reports
+#                   goal-tolerance failures, so the harvest cycle does not run
+#                   on it yet.
+#   to enable       change the transmission interface in urdf/cr10_grape.xacro
+#                   from PositionJointInterface to EffortJointInterface (both
+#                   the <joint> and the <actuator> lines in the pos_trans
+#                   macro), and load this file instead of
+#                   gazebo_controllers.yaml in launch/vineyard_gazebo.launch.
+#   what to tune    the integral terms against gravity sag, joint by joint,
+#                   starting at the shoulder. Raising them 15x cut the
+#                   Cartesian error but made the named-pose overshoot worse, so
+#                   the next step is per-joint rather than global scaling.
+#
+# One route that does NOT work, so it is not worth retrying: gazebo_ros_control's
+# POSITION_PID mode (position transmissions plus gazebo_ros_control/pid_gains).
+# It diverges on this chain. Even at p = 50, far too weak to hold a 24 kg arm
+# against gravity, every joint ran to its stop and joint3 tunnelled through its
+# 2.793 rad limit to -7.44 rad at 68 rad/s.
+#
+joint_state_controller:
+  type: joint_state_controller/JointStateController
+  publish_rate: 100
+
+# ======================== arm: torque control ========================
+# The joints are driven by torque, not by writing angles into the physics
+# engine. That is the whole point: under Joint::SetPosition the joints were
+# infinitely stiff, tracking error was always zero and meaningless, any contact
+# came back as a rigid impulse (the arm brushing a post threw the 132 kg
+# platform 0.79 m sideways), and a rigidly attached cluster biased the joints
+# by ~0.07 rad because nothing was regulating them. Force, contact load and
+# tracking accuracy were all unmeasurable.
+#
+# The PID lives in the controller rather than in gazebo_ros_control. Its
+# POSITION_PID mode was tried first and diverged on this chain: even at p = 50,
+# far too weak to hold a 24 kg arm against gravity, the joints ran to their
+# stops and joint3 tunnelled through its 2.793 rad limit to -7.44 rad.
+#
+# Gains are sized from the gravity torque each joint carries. The arm below the
+# shoulder is about 24 kg with its centre of mass up to ~0.6 m out, so joint2
+# sees roughly 140 N.m. p alone leaves a steady sag of torque/p; the integral
+# term is what removes it, and the first set had i an order of magnitude too
+# small -- every move finished about 0.05 rad short, which is 60 mm at the tool
+# against a 14 mm laser spot. d is near critical for the ~1 kg.m^2 of effective
+# inertia at the shoulder.
+arm_controller:
+  type: effort_controllers/JointTrajectoryController
+  joints: [joint1, joint2, joint3, joint4, joint5, joint6]
+  gains:
+    joint1: {p: 3000.0, i: 300.0, d: 120.0, i_clamp: 120.0}
+    joint2: {p: 9000.0, i: 900.0, d: 380.0, i_clamp: 400.0}
+    joint3: {p: 5000.0, i: 500.0, d: 220.0, i_clamp: 300.0}
+    joint4: {p: 1500.0, i: 150.0, d:  60.0, i_clamp: 100.0}
+    joint5: {p:  700.0, i:  70.0, d:  30.0, i_clamp:  60.0}
+    joint6: {p:  300.0, i:  30.0, d:  12.0, i_clamp:  30.0}
+  constraints:
+    goal_time: 3.0
+    # These were all disabled while the joints were kinematic, because tracking
+    # error was not a physical quantity and every tolerance fired spuriously.
+    # With real torque control they mean something again:
+    #   trajectory  loose on purpose. A torque-driven joint lags its trajectory
+    #               by design; this catches a joint that has stalled or been
+    #               blocked, it is not there to police lag.
+    #   goal        0.02 rad, about 24 mm at the CR10's 1.2 m reach. The laser
+    #               spot is 14 mm at its working distance, so this is the
+    #               accuracy the cut actually needs.
+    stopped_velocity_tolerance: 0.05
+    joint1: {trajectory: 0.60, goal: 0.02}
+    joint2: {trajectory: 0.60, goal: 0.02}
+    joint3: {trajectory: 0.60, goal: 0.02}
+    joint4: {trajectory: 0.60, goal: 0.02}
+    joint5: {trajectory: 0.60, goal: 0.02}
+    joint6: {trajectory: 0.60, goal: 0.02}
+  stop_trajectory_duration: 0.5
+  state_publish_rate: 50
+  action_monitor_rate: 20

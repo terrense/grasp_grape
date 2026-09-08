@@ -305,7 +305,7 @@
     <parent link="arm_base_link"/><child link="Link1"/>
     <axis xyz="0 0 1"/>
     <limit lower="-3.1416" upper="3.1416" effort="500" velocity="3.14"/>
-    <dynamics damping="1.0" friction="0.5"/>
+    <dynamics damping="5.0" friction="1.0"/>
   </joint>
 
   <link name="Link1">
@@ -323,7 +323,7 @@
     <parent link="Link1"/><child link="Link2"/>
     <axis xyz="0 0 1"/>
     <limit lower="-3.1416" upper="3.1416" effort="500" velocity="3.14"/>
-    <dynamics damping="1.0" friction="0.5"/>
+    <dynamics damping="5.0" friction="1.0"/>
   </joint>
 
   <link name="Link2">
@@ -341,7 +341,7 @@
     <parent link="Link2"/><child link="Link3"/>
     <axis xyz="0 0 1"/>
     <limit lower="-2.793" upper="2.793" effort="500" velocity="3.14"/>
-    <dynamics damping="1.0" friction="0.5"/>
+    <dynamics damping="5.0" friction="1.0"/>
   </joint>
 
   <link name="Link3">
@@ -359,7 +359,7 @@
     <parent link="Link3"/><child link="Link4"/>
     <axis xyz="0 0 1"/>
     <limit lower="-3.1416" upper="3.1416" effort="500" velocity="3.14"/>
-    <dynamics damping="1.0" friction="0.5"/>
+    <dynamics damping="5.0" friction="1.0"/>
   </joint>
 
   <link name="Link4">
@@ -377,7 +377,7 @@
     <parent link="Link4"/><child link="Link5"/>
     <axis xyz="0 0 1"/>
     <limit lower="-3.1416" upper="3.1416" effort="500" velocity="3.14"/>
-    <dynamics damping="1.0" friction="0.5"/>
+    <dynamics damping="5.0" friction="1.0"/>
   </joint>
 
   <link name="Link5">
@@ -395,7 +395,7 @@
     <parent link="Link5"/><child link="Link6"/>
     <axis xyz="0 0 1"/>
     <limit lower="-3.1416" upper="3.1416" effort="500" velocity="3.14"/>
-    <dynamics damping="1.0" friction="0.5"/>
+    <dynamics damping="5.0" friction="1.0"/>
   </joint>
 
   <link name="Link6">

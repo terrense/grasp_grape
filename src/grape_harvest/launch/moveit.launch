@@ -43,10 +43,13 @@
     <param name="moveit_manage_controllers"   value="true"/>
     <param name="trajectory_execution/allowed_execution_duration_scaling" value="3.0"/>
     <param name="trajectory_execution/allowed_goal_duration_margin"       value="2.0"/>
-    <!-- 0 disables the start-state check; the carried cluster biases the
-         kinematically driven joints past any sane threshold. Re-enabling it at
-         0.05 was tried and did not fix the "trajectory reports success without
-         moving the arm" fault; it is left disabled so the demo at least moves. -->
+    <!-- Start-state check, back on at 0.05 rad. It was disabled when the
+         joints were driven by Joint::SetPosition, because a rigidly attached
+         cluster biased them past any sane threshold and every execution was
+         refused. With PID behind the joints the bias is regulated away and the
+         check earns its keep: disabled, MoveIt will execute a trajectory from
+         a state it was not planned from and the tool ends up somewhere else
+         with nothing reporting a failure. -->
     <param name="trajectory_execution/allowed_start_tolerance"            value="0.0"/>
 
     <!-- scene monitoring -->

@@ -2,45 +2,31 @@ joint_state_controller:
   type: joint_state_controller/JointStateController
   publish_rate: 100
 
+# Position control with no PID gains, so gazebo_ros_control falls back to
+# Joint::SetPosition: the commanded angle is written straight into the physics
+# engine every step. The consequence is that the joints are infinitely stiff and
+# the three tolerances below are meaningless, which is why they are disabled or
+# very wide. See config/gazebo_controllers_torque.yaml for the torque-driven
+# alternative and what it would take to switch.
 arm_controller:
   type: position_controllers/JointTrajectoryController
   joints: [joint1, joint2, joint3, joint4, joint5, joint6]
   constraints:
     goal_time: 2.0
-    # 0 disables the check. gazebo_ros_control drives these joints with
-    # Joint::SetPosition (no PID gains are given), so the velocity Gazebo
-    # reports never settles cleanly to zero and this tolerance -- which
-    # joint_trajectory_controller folds into the *goal* tolerance as its
-    # velocity component -- aborts every trajectory with a misleading
-    # "goal error" message quoting the (tiny) position error instead.
+    # 0 disables the check. With SetPosition the reported velocity never
+    # settles cleanly to zero, and joint_trajectory_controller folds this into
+    # the goal tolerance as its velocity component, so every trajectory aborted
+    # with a "goal error" message quoting the (tiny) position error instead.
     stopped_velocity_tolerance: 0.0
-    # trajectory (path) tolerance disabled. These joints are driven
-    # kinematically by Joint::SetPosition, and once gazebo_ros_link_attacher
-    # rigidly joins the cut cluster to the flange the joint states deviate
-    # from the commanded path (PATH_TOLERANCE_VIOLATED on joint4). Path
-    # tracking is not a meaningful signal for a kinematically driven joint;
-    # the goal tolerance below still guards the endpoint.
-    # Goal tolerance 0.05 rad. 0.01 was tried and measured *worse* at the
-    # tool (0.104 m against 0.061 m at 0.12), which is the controller
-    # spending longer settling rather than arriving closer; the beam now
-    # has a 184 mm standoff so along-axis error costs nothing anyway, and
-    # what is left to control is the lateral component.
+    # Path tolerance disabled for the same reason: path tracking is not a
+    # meaningful signal for a kinematically driven joint, and once
+    # gazebo_ros_link_attacher joins a cut cluster to the flange the states
+    # deviate from the commanded path anyway.
     #
-    # Original note: It was 0.12 for the shear cutter, whose jaws had
-    # 96 mm of opening to absorb the error; the laser spot is about 4 mm and
-    # 0.12 rad over a 1.2 m CR10 is ~0.14 m of tool error, so it has to be
-    # tight now. Measured: 0.061 m of tool error at 0.12, which put the beam
-    # past the stem instead of on it.
-    #
-    # Tightening this was tried once before and appeared to make things worse.
-    # It did not: at that point compute_cartesian_path results were being
-    # executed unretimed, so the arm was not moving at all and the tolerance
-    # was irrelevant. Retiming came first; this is the second half.
-    #
-    # The cut happens BEFORE the cluster is attached, so the arm is unloaded
-    # exactly when accuracy matters. The carry moves afterwards do run with the
-    # load bias, and if they start failing on tolerance that is where to fix
-    # it, not by blinding the approach.
+    # Goal tolerance 0.05 rad, about 60 mm at the CR10's 1.2 m reach. Tighter
+    # would be better for the laser, whose spot is 14 mm, but a rigidly
+    # attached cluster biases these joints by ~0.07 rad and nothing regulates
+    # it. That trade is exactly what torque control removes.
     joint1: {trajectory: 0.0, goal: 0.05}
     joint2: {trajectory: 0.0, goal: 0.05}
     joint3: {trajectory: 0.0, goal: 0.05}
