@@ -24,6 +24,7 @@
   <arg name="torque"   default="false"/>
   <arg name="steering" default="false"/>
   <arg name="verify"   default="false"/>
+  <arg name="servo"    default="false"/>
 
   <include file="$(find grape_harvest)/launch/vineyard_gazebo.launch">
     <arg name="gui" value="$(arg gui)"/>
@@ -49,7 +50,8 @@
        the fruit, then sits stowed until the platform stops next to something. -->
   <node name="grape_harvester" pkg="grape_harvest" type="pick_grape.py"
         output="screen" required="false"
-        args="$(eval '--teleop --verify' if arg('verify') else '--teleop')"
+        args="$(eval '--teleop' + (' --verify' if arg('verify') else '')
+                     + (' --servo' if arg('servo') else ''))"
         launch-prefix="bash -c 'sleep 22; $0 $@'"/>
 
 </launch>

@@ -6,7 +6,17 @@
   <arg name="rviz"       default="false"/>
   <arg name="torque"     default="false"/>  <!-- moveit rviz plugin -->
   <arg name="auto_start" default="false"/>   <!-- run the pick node -->
-  <arg name="verify"     default="true"/>   <!-- report anything the arm moved -->
+  <arg name="verify"     default="true"/>
+  <!-- servo:=true takes the aim from the eye-in-hand camera instead of
+       the coordinate the scene generator produced -->
+  <arg name="servo"      default="false"/>   <!-- report anything the arm moved -->
+
+  <!-- guard:=true watches the wrist force sensor: it stops a motion that runs
+       into something the planner did not know about, and yields to contact
+       before firing. Wants torque:=true. Under the default kinematic joints
+       the wrist reads constraint impulses rather than contact force, and the
+       thresholds do not mean anything. -->
+  <arg name="guard"      default="false"/>
 
   <!-- Recording. Prefer gui:=false while recording: the video comes from the
        scene camera, not the GUI, and a headless gzserver keeps the sensor at a
@@ -32,7 +42,9 @@
 
   <node if="$(arg auto_start)" name="grape_harvester" pkg="grape_harvest"
         type="pick_grape.py" output="screen" required="false"
-        args="$(eval '--verify' if arg('verify') else '')"
+        args="$(eval (' --verify' if arg('verify') else '')
+                     + (' --servo' if arg('servo') else '')
+                     + (' --guard' if arg('guard') else ''))"
         launch-prefix="bash -c 'sleep 18; $0 $@'"/>
 
 </launch>

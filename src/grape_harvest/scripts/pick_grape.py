@@ -71,10 +71,11 @@ from gazebo_msgs.msg import ModelState, ModelStates
 from nav_msgs.msg import Odometry
 from gazebo_msgs.srv import SetModelState, SpawnModel
 from gazebo_ros_link_attacher.srv import Attach, AttachRequest
-from sensor_msgs.msg import LaserScan
+from sensor_msgs.msg import JointState, LaserScan
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from grape_detect import GrapeDetector
+from contact_guard import ContactGuard
 from make_models import (POST_H, PANEL_W, PANELS_PER_ROW, N_ROWS, ROW_LEN,
                          LANE_STANDOFF, CRATE_BASE_XYZ, CRATE_INNER,
                          CRATE_SLOTS, row_x, lane_x, canopy_z, tunnel_bounds,
@@ -248,6 +249,10 @@ class GrapeHarvester(object):
         self.in_scene = set()
         self.track_crate = TRACK_CRATE_CONTENTS
         self.detector = None        # set by main() when --servo is given
+        self.guard = None           # set by main() when --guard is given
+        self.jvel = []
+        rospy.Subscriber("/joint_states", JointState, self._js_cb,
+                         queue_size=1)
 
         rospy.loginfo("planning frame: %s", self.planning_frame)
         rospy.loginfo("end effector  : %s", self.arm.get_end_effector_link())
@@ -263,6 +268,110 @@ class GrapeHarvester(object):
 
     def _odom_cb(self, msg):
         self.twist = msg.twist.twist
+
+    def _js_cb(self, msg):
+        self.jvel = [v for n, v in zip(msg.name, msg.velocity)
+                     if n.startswith("joint")]
+
+    def moving(self, still=0.02):
+        return bool(self.jvel) and max(abs(v) for v in self.jvel) > still
+
+    # Moves during which touching something is the expected outcome rather
+    # than a collision.
+    #
+    #   grasp / release   the descent closes the collar around a bunch, and
+    #                     stopping when the bunch pushes back is the move
+    #                     working, not failing
+    #   comply            the yield away from a contact. It necessarily starts
+    #                     in one
+    #   servo             a few mm of re-aim with the collar already around the
+    #                     fruit, same
+    #
+    # Retreat is not on this list. A snag on the way out, with fruit in the
+    # collar, is a real problem and stopping is the right answer.
+    CONTACT_EXPECTED = ("grasp", "release", "comply", "servo")
+
+    def contact_is_expected(self, label):
+        return any(k in label for k in self.CONTACT_EXPECTED)
+
+    def guarded_wait(self, label, timeout=40.0):
+        """Wait out a non-blocking move with the force sensor watching.
+
+        Returns True if the move ran to a stop, False if the guard tripped and
+        stopped it. Completion is judged from joint velocity rather than from
+        the action result, because the point of starting the move non-blocking
+        is to be able to interrupt it.
+        """
+        t0 = rospy.Time.now()
+        rate = rospy.Rate(50)
+        started = False
+        still_since = None
+        while not rospy.is_shutdown():
+            if self.guard.tripped():
+                f, tq = self.guard.contact()
+                self.arm.stop()
+                if self.contact_is_expected(label):
+                    # the collar is on the bunch. That is where this move was
+                    # trying to get to, so stop here and call it arrived --
+                    # pressing on would only crush fruit the arm cannot push
+                    # through anyway.
+                    rospy.loginfo("  contact during %s: %.1f N -- the collar "
+                                  "is on the bunch, cutting from here",
+                                  label, f)
+                    return True
+                rospy.logwarn("  CONTACT during %s: %.1f N, %.1f Nm -- "
+                              "stopping", label, f, tq)
+                return False
+            if self.moving():
+                started = True
+                still_since = None
+            elif started:
+                if still_since is None:
+                    still_since = rospy.Time.now()
+                elif (rospy.Time.now() - still_since).to_sec() > 0.4:
+                    return True
+            if (rospy.Time.now() - t0).to_sec() > timeout:
+                rospy.logwarn("  %s did not settle in %.0f s", label, timeout)
+                self.arm.stop()
+                return True
+            rate.sleep()
+        return False
+
+    def comply(self, label):
+        """Give way to whatever the tool is leaning on.
+
+        Item 3. Holding a commanded pose against fruit is the wrong behaviour
+        for a head that has to close around it; yielding in proportion to the
+        force is what an impedance-controlled wrist would do, and this is the
+        task-level version of it.
+        """
+        if self.guard is None:
+            return
+        f, _ = self.guard.contact()
+        if f < 8.0:      # free-motion noise reaches 4.5 N; stay clear of it
+            return
+        dx, dy, dz = self.guard.yield_offset()
+        # sensor frame is the tool frame here (the sensor sits on ee_joint)
+        try:
+            m = self._mat(self.planning_frame, "ee_base")
+        except Exception:
+            return
+        wx = m[0, 0] * dx + m[0, 1] * dy + m[0, 2] * dz
+        wy = m[1, 0] * dx + m[1, 1] * dy + m[1, 2] * dz
+        wz = m[2, 0] * dx + m[2, 1] * dy + m[2, 2] * dz
+        mag = math.sqrt(wx * wx + wy * wy + wz * wz)
+        if mag < 0.002:
+            return
+        rospy.loginfo("  compliance: %.1f N on the tool, yielding %.0f mm "
+                      "before %s", f, mag * 1000, label)
+        cur = self._mat(self.planning_frame, "tcp_link")
+        p = Pose()
+        p.position.x = cur[0, 3] + wx
+        p.position.y = cur[1, 3] + wy
+        p.position.z = cur[2, 3] + wz
+        q = tft.quaternion_from_matrix(cur)
+        p.orientation = Quaternion(*q)
+        self.go_cartesian(p, "%s comply" % label)
 
     def base_speed(self):
         if self.twist is None:
@@ -741,7 +850,12 @@ class GrapeHarvester(object):
             else:
                 rospy.logwarn("  no collision-free IK, handing pose to OMPL")
                 self.arm.set_pose_target(pose)
-            ok = self.arm.go(wait=True)
+            if self.guard is not None:
+                self.guard.reset()
+                self.arm.go(wait=False)
+                ok = self.guarded_wait(label)
+            else:
+                ok = self.arm.go(wait=True)
             self.arm.stop()
             self.arm.clear_pose_targets()
             if ok:
@@ -776,6 +890,14 @@ class GrapeHarvester(object):
                 self.robot.get_current_state(), plan,
                 velocity_scaling_factor=self.speed,
                 acceleration_scaling_factor=self.speed)
+            if self.guard is not None:
+                self.guard.reset()
+                self.arm.execute(plan, wait=False)
+                held = self.guarded_wait(label)
+                self.arm.stop()
+                if held:
+                    return True
+                return False
             if self.arm.execute(plan, wait=True):
                 self.arm.stop()
                 return True
@@ -827,6 +949,7 @@ class GrapeHarvester(object):
         if not self.go_cartesian(grasp, "%s grasp" % name):
             return False
 
+        self.comply("the cut")
         rospy.loginfo("--- laser cut ---")
         grasp = self.servo_correct(spec, grasp)
         if not self.fire(name, grasp):
@@ -841,6 +964,13 @@ class GrapeHarvester(object):
         r2 = self._att(self.detach, TRELLIS_MODEL,
                        "wire_r%d_fruit" % spec["row"], name, BUNCH_LINK)
         rospy.loginfo("  stem cut (ok=%s)", r2.ok)
+        if self.guard is not None:
+            # The bunch now hangs on the sensor. Re-fit the gravity model
+            # rather than taring: its weight swings round the sensor frame as
+            # the wrist moves, the same way the head's does, and a fixed bias
+            # would leave a few newtons of phantom force through the retreat.
+            rospy.sleep(0.4)
+            self.guard.calibrate()
 
         # Bring the cluster back as geometry carried by the arm, so the planner
         # keeps avoiding it for the rest of the cycle. (attach_cylinder does not
@@ -916,6 +1046,10 @@ class GrapeHarvester(object):
         self.scene.remove_world_object(name)
         r3 = self._att(self.detach, ROBOT_MODEL, ROBOT_EE_LINK, name,
                        BUNCH_LINK)
+        if self.guard is not None:
+            # empty again: back to the head on its own
+            rospy.sleep(0.4)
+            self.guard.calibrate()
         rospy.loginfo("  released into the crate (ok=%s)", r3.ok)
         rospy.sleep(LANDING_SETTLE)
 
@@ -1268,6 +1402,9 @@ def main():
                          "within reach whenever the platform is stopped")
     ap.add_argument("--row", type=int, default=0,
                     help="which trellis row to work (0..%d)" % (N_ROWS - 1))
+    ap.add_argument("--guard", action="store_true",
+                    help="watch the wrist force sensor: stop a motion that runs "
+                         "into something, and yield to contact before cutting")
     ap.add_argument("--servo", action="store_true",
                     help="correct the aim from the eye-in-hand camera before "
                          "firing, instead of trusting the prior coordinate")
@@ -1286,6 +1423,15 @@ def main():
     h = GrapeHarvester()
     if args.track_crate:
         h.track_crate = True
+    if args.guard:
+        h.guard = ContactGuard()
+        if h.guard.ready(10.0):
+            rospy.loginfo("contact guard ON: trip at %.0f N, compliance %.1f "
+                          "mm/N", ContactGuard.TRIP_FORCE,
+                          ContactGuard.COMPLIANCE * 1000)
+        else:
+            rospy.logerr("no wrench on /ee_ft; running without the guard")
+            h.guard = None
     if args.servo:
         h.detector = GrapeDetector()
         rospy.loginfo("visual servo ON: the aim comes from the camera, "

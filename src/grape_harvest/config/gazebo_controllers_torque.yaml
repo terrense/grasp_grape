@@ -8,11 +8,18 @@
 #                   default setup they are all meaningless: the joints are
 #                   infinitely stiff, tracking error is always zero, and a
 #                   contact comes back as a rigid impulse.
-#   where it stands the arm holds itself, stays inside its limits, and reaches
-#                   a commanded Cartesian pose to about 17 mm. Named poses
-#                   still settle ~0.10 rad out and the controller reports
-#                   goal-tolerance failures, so the harvest cycle does not run
-#                   on it yet.
+#   where it stands tracking error through a full move is 0.003 rad on every
+#                   joint and settles to 1e-4. Two faults were in the way and
+#                   neither was a gain:
+#                     - integral windup pinned joints 4 and 6 about 0.06-0.09
+#                       rad out and would not unwind (see the antiwindup note
+#                       on the gains below);
+#                     - the URDF had no reflected rotor inertia, so at the
+#                       wrist singularity the joint4/joint6 differential mode
+#                       had almost no inertia and the loop went unstable --
+#                       both joints saturating at 500 N.m in opposite
+#                       directions within two samples. Fixed in
+#                       urdf/cr10_grape.xacro.
 #   to enable       change the transmission interface in urdf/cr10_grape.xacro
 #                   from PositionJointInterface to EffortJointInterface (both
 #                   the <joint> and the <actuator> lines in the pos_trans
@@ -32,12 +39,11 @@
 #                   past what a 1 kHz loop can carry. Reverted.
 #
 #                   That the error is systematic and barely moved under a 5x
-#                   gain change suggests it is not a gain problem at all. Next
-#                   thing to check: the trajectory controller aborts on its
-#                   goal tolerance and stops driving while the integral is
-#                   still pulling in, so the arm settles wherever it was when
-#                   the goal was abandoned. Try a longer goal_time and a wider
-#                   goal tolerance first, and only then touch gains again.
+#                   gain change was the clue: it was not a gain problem at all.
+#                   It was integral windup -- the term pinned at i_clamp with
+#                   the accumulator far past it, so the joint sat wherever
+#                   p*e + i_clamp balanced the load. Fixed by clamping the
+#                   accumulator (antiwindup) instead of only its output.
 #
 # One route that does NOT work, so it is not worth retrying: gazebo_ros_control's
 # POSITION_PID mode (position transmissions plus gazebo_ros_control/pid_gains).
@@ -73,36 +79,68 @@ joint_state_controller:
 arm_controller:
   type: effort_controllers/JointTrajectoryController
   joints: [joint1, joint2, joint3, joint4, joint5, joint6]
+  #
+  # antiwindup is the important entry here, not the gains.
+  #
+  # Without it, control_toolbox clamps the integral term's *output* at i_clamp
+  # but goes on accumulating the raw error sum underneath. Once that sum has
+  # run past the clamp -- which it does during any long move -- reversing the
+  # error unwinds it at the rate it wound up, and until it comes back inside
+  # the clamp the term is a constant. The joint then sits at whatever offset
+  # satisfies p*e + i_clamp = the torque it has to hold, and no gain change
+  # touches it.
+  #
+  # That is exactly what was measured. Holding stow: joint3 -0.066 rad at
+  # -31.1 N.m against p*e = -330 and i_clamp = 300; joint4 -0.058 at 4.4 N.m
+  # against -145 and 150; joint6 -0.090 at -0.9 N.m against -81 and 80. Each
+  # row is p*e + i_clamp = effort to within a newton-metre. Held still for
+  # thirty seconds, joint3 unwound to zero and joints 4 and 6 did not move at
+  # all -- same value to four decimals, start to finish.
+  #
+  # With antiwindup the accumulator itself is clamped, so the term reverses as
+  # soon as the error does.
+  #
+  # The clamps are now sized from the torque each joint actually holds rather
+  # than from a round number: 31 N.m at joint3 and about 1 N.m at the wrist,
+  # with headroom for the extended pose and for a cluster in the collar.
   gains:
-    joint1: {p: 3000.0, i: 300.0, d: 120.0, i_clamp: 120.0}
-    joint2: {p: 9000.0, i: 900.0, d: 380.0, i_clamp: 400.0}
-    joint3: {p: 5000.0, i: 500.0, d: 220.0, i_clamp: 300.0}
+    joint1: {p: 3000.0, i:  600.0, d: 120.0, i_clamp:  60.0, antiwindup: true}
+    joint2: {p: 9000.0, i: 1800.0, d: 380.0, i_clamp: 250.0, antiwindup: true}
+    joint3: {p: 5000.0, i: 1000.0, d: 220.0, i_clamp: 150.0, antiwindup: true}
     # wrist: d set near 2*sqrt(p*J) for the small inertia out here, NOT above
     # it. The earlier attempt at p=1500/d=50 on joint6 was three times critical
-    # and oscillated.
-    joint4: {p: 2500.0, i: 250.0, d:  55.0, i_clamp: 150.0}
-    joint5: {p:  700.0, i:  70.0, d:  30.0, i_clamp:  60.0}
-    joint6: {p:  900.0, i: 120.0, d:  15.0, i_clamp:  80.0}
+    # and oscillated. These gains are unchanged -- they were never the problem.
+    joint4: {p: 2500.0, i:  500.0, d:  55.0, i_clamp:  40.0, antiwindup: true}
+    joint5: {p:  700.0, i:  140.0, d:  30.0, i_clamp:  25.0, antiwindup: true}
+    joint6: {p:  900.0, i:  240.0, d:  15.0, i_clamp:  25.0, antiwindup: true}
   constraints:
-    goal_time: 12.0
+    goal_time: 5.0
     # These were all disabled while the joints were kinematic, because tracking
     # error was not a physical quantity and every tolerance fired spuriously.
     # With real torque control they mean something again:
     #   trajectory  loose on purpose. A torque-driven joint lags its trajectory
     #               by design; this catches a joint that has stalled or been
     #               blocked, it is not there to police lag.
-    #   goal        Deliberately wide (0.20 rad) and goal_time long, to keep
-    #               the controller driving instead of declaring failure while
-    #               the integral term is still pulling in. What the cut needs
-    #               is about 0.02 rad; that gets tightened again once the
-    #               settled error is actually inside it.
+    #   goal        0.05 rad. A bench move settles inside 0.003, but a full
+    #               cycle -- cartesian segments, a cluster on the tool, moves
+    #               starting before the last stop has bled off -- was measured
+    #               at 0.054 on joint4. This is what the arm holds, not what
+    #               would be nice. The laser spot is 14 mm and the servo
+    #               correction closes the rest.
+    #
+    # Measured worst cases over a full row, which is where these numbers come
+    # from rather than from a bench move: path 0.229 on joint3 and 0.216 on
+    # joint6; goal 0.054 on joint4. Several goal failures reported errors of
+    # 0.002-0.008 rad, well inside tolerance -- those were
+    # stopped_velocity_tolerance, i.e. arrived but still drifting, which is
+    # what the doubled integral gains are for.
     stopped_velocity_tolerance: 0.05
-    joint1: {trajectory: 0.60, goal: 0.20}
-    joint2: {trajectory: 0.60, goal: 0.20}
-    joint3: {trajectory: 0.60, goal: 0.20}
-    joint4: {trajectory: 0.60, goal: 0.20}
-    joint5: {trajectory: 0.60, goal: 0.20}
-    joint6: {trajectory: 0.60, goal: 0.20}
+    joint1: {trajectory: 0.35, goal: 0.05}
+    joint2: {trajectory: 0.35, goal: 0.05}
+    joint3: {trajectory: 0.35, goal: 0.05}
+    joint4: {trajectory: 0.35, goal: 0.05}
+    joint5: {trajectory: 0.35, goal: 0.05}
+    joint6: {trajectory: 0.35, goal: 0.05}
   stop_trajectory_duration: 0.5
   state_publish_rate: 50
   action_monitor_rate: 20

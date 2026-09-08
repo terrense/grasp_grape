@@ -365,15 +365,14 @@
     <parent link="Link3"/><child link="Link4"/>
     <axis xyz="0 0 1"/>
     <limit lower="-3.1416" upper="3.1416" effort="500" velocity="3.14"/>
-    <dynamics damping="5.0" friction="1.0"/>
+    <dynamics damping="15.0" friction="1.0"/>
   </joint>
 
   <link name="Link4">
     <inertial>
       <origin xyz="-2.5313749E-07 0.0079872450 -0.0058907423" rpy="0 0 0"/>
       <mass value="1.1688429"/>
-      <inertia ixx="0.0029261493" ixy="8.2044008E-09" ixz="-8.1999042E-09"
-               iyy="0.0015005300"  iyz="-5.4492522E-05" izz="0.0027327494"/>
+      <inertia ixx="0.06" ixy="8.2044008E-09" ixz="-8.1999042E-09" iyy="0.06" iyz="-5.4492522E-05" izz="0.06" />
     </inertial>
     <visual><geometry><mesh filename="${mesh}/Link4.STL"/></geometry><material name="dobot_white"/></visual>
     <collision><geometry><mesh filename="${mesh}/Link4.STL"/></geometry></collision>
@@ -383,15 +382,14 @@
     <parent link="Link4"/><child link="Link5"/>
     <axis xyz="0 0 1"/>
     <limit lower="-3.1416" upper="3.1416" effort="500" velocity="3.14"/>
-    <dynamics damping="5.0" friction="1.0"/>
+    <dynamics damping="15.0" friction="1.0"/>
   </joint>
 
   <link name="Link5">
     <inertial>
       <origin xyz="5.5069946E-07 -0.0145467578 -0.0045488709" rpy="0 0 0"/>
       <mass value="1.2230308"/>
-      <inertia ixx="0.0033790546" ixy="3.5781990E-08" ixz="-7.5182806E-09"
-               iyy="0.0014925557"  iyz="8.4191792E-05" izz="0.0032330031"/>
+      <inertia ixx="0.05" ixy="3.5781990E-08" ixz="-7.5182806E-09" iyy="0.05" iyz="8.4191792E-05" izz="0.05" />
     </inertial>
     <visual><geometry><mesh filename="${mesh}/Link5.STL"/></geometry><material name="dobot_white"/></visual>
     <collision><geometry><mesh filename="${mesh}/Link5.STL"/></geometry></collision>
@@ -401,15 +399,14 @@
     <parent link="Link5"/><child link="Link6"/>
     <axis xyz="0 0 1"/>
     <limit lower="-3.1416" upper="3.1416" effort="500" velocity="3.14"/>
-    <dynamics damping="5.0" friction="1.0"/>
+    <dynamics damping="15.0" friction="1.0"/>
   </joint>
 
   <link name="Link6">
     <inertial>
       <origin xyz="1.4298747E-10 2.2964069E-05 -0.0205297780" rpy="0 0 0"/>
       <mass value="0.2054395"/>
-      <inertia ixx="0.00011011543" ixy="-8.2148788E-14" ixz="4.2861584E-14"
-               iyy="0.00011066247"  iyz="3.6887993E-08" izz="0.00020518430"/>
+      <inertia ixx="0.02" ixy="-8.2148788E-14" ixz="4.2861584E-14" iyy="0.02" iyz="3.6887993E-08" izz="0.02" />
     </inertial>
     <visual><geometry><mesh filename="${mesh}/Link6.STL"/></geometry><material name="dobot_white"/></visual>
     <collision><geometry><mesh filename="${mesh}/Link6.STL"/></geometry></collision>
@@ -793,6 +790,51 @@
         <frameName>laser_link</frameName>
       </plugin>
     </sensor>
+  </gazebo>
+
+  <!-- ODE applies <dynamics damping> explicitly, which puts an upper
+       bound on how much damping can be asked for before the integration
+       itself goes unstable. The implicit form folds it into the constraint
+       solver, which is what makes the raised wrist damping usable. -->
+  <xacro:macro name="implicit_damping" params="jname">
+    <gazebo reference="${jname}">
+      <implicitSpringDamper>true</implicitSpringDamper>
+    </gazebo>
+  </xacro:macro>
+  <xacro:implicit_damping jname="joint1"/>
+  <xacro:implicit_damping jname="joint2"/>
+  <xacro:implicit_damping jname="joint3"/>
+  <xacro:implicit_damping jname="joint4"/>
+  <xacro:implicit_damping jname="joint5"/>
+  <xacro:implicit_damping jname="joint6"/>
+
+  <!-- ============ wrist force/torque sensor ============
+       On ee_joint, so it reads everything past the flange: the head, the
+       collar, and whatever the collar is holding. That is the same place a
+       real machine puts it.
+
+       disableFixedJointLumping is not optional here. The URDF-to-SDF
+       conversion merges fixed joints into the parent link by default, and a
+       joint that has been merged out of existence cannot report a wrench;
+       provideFeedback then asks the solver to compute the constraint force
+       across it.
+
+       Note what this can and cannot tell you in this simulation: with the
+       joints driven by Joint::SetPosition (the default) the arm is infinitely
+       stiff, so a contact produces an impulse rather than a force that builds,
+       and the readings are spiky and not physically meaningful. Under
+       torque:=true they are. -->
+  <gazebo reference="ee_joint">
+    <disableFixedJointLumping>true</disableFixedJointLumping>
+    <provideFeedback>true</provideFeedback>
+  </gazebo>
+  <gazebo>
+    <plugin name="ee_ft_sensor" filename="libgazebo_ros_ft_sensor.so">
+      <updateRate>100.0</updateRate>
+      <topicName>ee_ft</topicName>
+      <jointName>ee_joint</jointName>
+      <gaussianNoise>0.02</gaussianNoise>
+    </plugin>
   </gazebo>
 
   <!-- eye-in-hand RealSense: for fruit detection later, not for VIO -->
