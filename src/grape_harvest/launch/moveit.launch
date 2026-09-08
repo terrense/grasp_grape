@@ -6,10 +6,16 @@
 <launch>
 
   <arg name="rviz" default="true"/>
+  <!-- must match vineyard_gazebo.launch: the two build robot_description
+       separately and a mismatch is silent -->
+  <arg name="torque" default="false"/>
+  <arg name="joint_hw"
+       default="$(eval 'Effort' if arg('torque') else 'Position')"/>
 
   <!-- ================= planning context ================= -->
   <param name="robot_description"
-         command="$(find xacro)/xacro $(find grape_harvest)/urdf/cr10_grape.xacro"/>
+         command="$(find xacro)/xacro $(find grape_harvest)/urdf/cr10_grape.xacro
+                  joint_hw:=$(arg joint_hw)"/>
   <param name="robot_description_semantic"
          textfile="$(find grape_harvest)/config/cr10_grape.srdf"/>
 

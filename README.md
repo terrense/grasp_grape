@@ -126,6 +126,9 @@ cd ~/grape_ws && catkin build && source devel/setup.bash
 rosrun grape_harvest make_vins_config.py src/grape_harvest/config/vineyard_vins.yaml
 sh src/grape_harvest/scripts/run_vins.sh
 
+# 关节走力矩控制（PID 在控制器里）而不是把角度写进物理引擎
+~/grape_ws/run_sim.sh roslaunch grape_harvest teleop_demo.launch torque:=true
+
 # 改场景：所有布局常量都在 make_models.py 顶部
 python3 src/grape_harvest/scripts/make_models.py
 ```
@@ -181,8 +184,23 @@ python3 src/grape_harvest/scripts/make_models.py
 | 搬运入筐 | ✅ | `IN CRATE`，碰撞自检：立柱/铁丝/地面均未碰动 |
 | 连续采摘 | ✅ | **一垄连采 6 串，零驱动超时，6/6 全部留在筐里** |
 | 整垄不间断作业 | ✅ | 停在 6 串是因为采收筐只有 6 格，不是失败 |
+| 关节力矩控制 | 🟡 | 跑通并可 `torque:=true` 切换，末端 17 mm；手腕两关节尚有 0.07–0.10 rad 稳态误差 |
 | VINS-Mono 接入 | 🟡 | 能初始化（需激励动作），但随后发散 |
 | 果实视觉识别 | ⬜ | eye-in-hand 相机已就位，算法未做 |
+
+---
+
+## 理论笔记
+
+[`docs/`](docs/) 是这个项目的技术笔记，每篇都是「通用理论 + 它在这套代码里的落点」，
+带实测数字和踩过的坑。
+
+| | 内容 | 一句话 |
+|---|---|---|
+| [01](docs/01-joint-control.md) | 关节控制与 PID | `SetPosition` 让机器人看起来完美——跟踪误差恒为零、关节无限刚性——而力控和接触载荷在那个模型里根本不存在 |
+| [02](docs/02-motion-planning.md) | 运动规划 | `compute_cartesian_path` 返回的是**路径不是轨迹**，直接执行会报成功而机械臂纹丝不动 |
+| [03](docs/03-collision-avoidance.md) | 碰撞检测与避障 | 避障不只是算一条不碰的路，还包括"万一碰了会发生什么" |
+| [04](docs/04-mobile-base-control.md) | 移动底盘的控制 | 纯比例接近律会让转向分量把内侧轮抵消到零，车在原地打转走不完最后几厘米 |
 
 ---
 

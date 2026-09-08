@@ -18,10 +18,26 @@
 #                   the <joint> and the <actuator> lines in the pos_trans
 #                   macro), and load this file instead of
 #                   gazebo_controllers.yaml in launch/vineyard_gazebo.launch.
-#   what to tune    the integral terms against gravity sag, joint by joint,
-#                   starting at the shoulder. Raising them 15x cut the
-#                   Cartesian error but made the named-pose overshoot worse, so
-#                   the next step is per-joint rather than global scaling.
+#   tuning notes    Measured settled error per joint told the whole story:
+#                   joint1 0.0002, joint2 0.0021, joint3 0.028, joint5 0.016,
+#                   but joint4 +0.068 and joint6 +0.104 (125 mm at the tool).
+#                   The wrist carries the laser head and collar, about 1.7 kg
+#                   hanging 0.24 m past the flange, and had the lowest gains
+#                   of the six.
+#
+#                   Raising them did NOT help. joint4 x2.7 and joint6 x5 took
+#                   the worst error from 0.10 rad to 0.22-0.30 rad and the arm
+#                   stopped settling at all within 8 s. The wrist links are
+#                   light, so more p there just pushes the natural frequency
+#                   past what a 1 kHz loop can carry. Reverted.
+#
+#                   That the error is systematic and barely moved under a 5x
+#                   gain change suggests it is not a gain problem at all. Next
+#                   thing to check: the trajectory controller aborts on its
+#                   goal tolerance and stops driving while the integral is
+#                   still pulling in, so the arm settles wherever it was when
+#                   the goal was abandoned. Try a longer goal_time and a wider
+#                   goal tolerance first, and only then touch gains again.
 #
 # One route that does NOT work, so it is not worth retrying: gazebo_ros_control's
 # POSITION_PID mode (position transmissions plus gazebo_ros_control/pid_gains).

@@ -4,6 +4,17 @@
 
   <arg name="gui"    default="true"/>
   <arg name="paused" default="false"/>
+  <!-- torque:=true drives the joints by torque through a PID instead of
+       writing angles into the physics engine. See
+       config/gazebo_controllers_torque.yaml for what works and what is
+       still being tuned. -->
+  <arg name="torque" default="false"/>
+  <!-- $(eval) has to be a whole attribute, so the two things that vary
+       with it are computed into their own args and referenced below. -->
+  <arg name="joint_hw"
+       default="$(eval 'Effort' if arg('torque') else 'Position')"/>
+  <arg name="ctrl_yaml"
+       default="$(eval 'gazebo_controllers_torque' if arg('torque') else 'gazebo_controllers')"/>
 
   <!-- Spawn pose: on the working lane of row 0, which make_models.lane_x(0)
        puts at x = 1.20, i.e. 0.80 m off the row, NOT the aisle centre. Rows are
@@ -29,7 +40,8 @@
   </include>
 
   <param name="robot_description"
-         command="$(find xacro)/xacro $(find grape_harvest)/urdf/cr10_grape.xacro"/>
+         command="$(find xacro)/xacro $(find grape_harvest)/urdf/cr10_grape.xacro
+                  joint_hw:=$(arg joint_hw)"/>
 
   <!-- Spawned with the arm already near the stow pose so it does not flail
        through the trellis while the controllers come up. -->
@@ -40,7 +52,8 @@
               -J joint4 -3.0708 -J joint5 -1.5708 -J joint6 0
               -unpause"/>
 
-  <rosparam file="$(find grape_harvest)/config/gazebo_controllers.yaml" command="load"/>
+  <rosparam command="load"
+            file="$(find grape_harvest)/config/$(arg ctrl_yaml).yaml"/>
 
   <node name="controller_spawner" pkg="controller_manager" type="spawner"
         respawn="false" output="screen"

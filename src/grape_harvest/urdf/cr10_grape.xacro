@@ -25,6 +25,12 @@
      RRTConnect times out. -->
 <robot name="cr10_robot" xmlns:xacro="http://ros.org/wiki/xacro">
 
+  <!-- Position (the default) writes joint angles straight into the physics
+       engine; Effort drives the joints by torque through a PID in the
+       controller. The controller yaml has to match, so both are selected
+       together by the launch file. -->
+  <xacro:arg name="joint_hw" default="Position"/>
+
   <xacro:property name="mesh" value="package://dobot_description/meshes/cr10"/>
 
   <!-- ===================== platform geometry ===================== -->
@@ -554,10 +560,10 @@
     <transmission name="${jname}_trans">
       <type>transmission_interface/SimpleTransmission</type>
       <joint name="${jname}">
-        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        <hardwareInterface>hardware_interface/$(arg joint_hw)JointInterface</hardwareInterface>
       </joint>
       <actuator name="${jname}_motor">
-        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        <hardwareInterface>hardware_interface/$(arg joint_hw)JointInterface</hardwareInterface>
         <mechanicalReduction>1</mechanicalReduction>
       </actuator>
     </transmission>
