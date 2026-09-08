@@ -39,6 +39,13 @@ class BaseDriver(object):
     K_LOOK = 2.2          # how hard a lane offset bends the aim heading
     AIM_MAX = 0.6         # rad; cap so it never aims across the row
     K_YAW = 2.0
+    # No integral term here on purpose. The plant already integrates (heading
+    # becomes lateral position) and the aim heading below is proportional
+    # action on the lateral error, so an integrator on the heading error would
+    # be the second one in series behind the vehicle's lag. Measured with one
+    # in: 10.7 m off lane and five timeouts in a row run, against zero timeouts
+    # without. If a steady lateral bias ever needs removing, integrate the
+    # cross-track error into the aim heading instead -- one integrator, not two.
     LANE_WARN = 0.12      # m; lane error worth warning about, because it
                           # comes straight off the arm reach margin
 
@@ -101,6 +108,7 @@ class BaseDriver(object):
         rospy.loginfo("drive -> y=%+.2f (lane x=%+.2f)", target_y, lane_x)
         t0 = rospy.Time.now()
         rate = rospy.Rate(20)
+
         # +1 when the robot faces +y, -1 when it faces -y: converts world-frame
         # errors into body-frame forward / left-of-track
         sgn = 1.0 if math.sin(heading) > 0 else -1.0
@@ -141,6 +149,7 @@ class BaseDriver(object):
             t.linear.x = max(-self.V_MAX, min(self.V_MAX, v))
 
             w = self.K_YAW * yaw_err
+
             # Skid steer subtracts w * track/2 from the inner side. Cap w so
             # that side never reverses while there is still ground to cover:
             # steering that stops a wheel also stops the platform.

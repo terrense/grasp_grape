@@ -23,6 +23,24 @@ from moveit_msgs.msg import RobotState
 from sensor_msgs.msg import JointState
 
 LINK_R = 0.09          # generous allowance for CR10 link cross-section
+
+# How far a stow candidate must stay from any joint limit. A pose that parks a
+# joint against its stop looks fine in FK and behaves badly under torque
+# control: gravity pushes the joint into the stop and the controller ends up
+# fighting a hard constraint instead of holding a position. The stow pose in use
+# before this check put joint4 0.07 rad from -pi and it sat on the stop.
+LIMIT_MARGIN = 0.35
+JOINT_LIMITS = {"joint1": (-3.1416, 3.1416), "joint2": (-3.1416, 3.1416),
+                "joint3": (-2.793, 2.793),   "joint4": (-3.1416, 3.1416),
+                "joint5": (-3.1416, 3.1416), "joint6": (-3.1416, 3.1416)}
+
+
+def clears_limits(q):
+    for name, v in zip(JOINTS, q):
+        lo, hi = JOINT_LIMITS[name]
+        if v - lo < LIMIT_MARGIN or hi - v < LIMIT_MARGIN:
+            return False
+    return True
 # the catch basket is the widest thing on the head and hangs 0.4 m below
 # the tool, so it dominates the stowed envelope and has to be in here
 ARM_LINKS = ["Link1", "Link2", "Link3", "Link4", "Link5", "Link6",
@@ -67,7 +85,11 @@ def main():
     validity = rospy.ServiceProxy("/check_state_validity", GetStateValidity)
 
     results = []
+    rejected = 0
     for q in candidates():
+        if not clears_limits(q):
+            rejected += 1
+            continue
         js = JointState()
         js.name = list(JOINTS)
         js.position = list(q)
@@ -96,6 +118,9 @@ def main():
 
         results.append((lat, top, q, vres.valid, len(vres.contacts)))
 
+    if rejected:
+        print("%d candidates dropped for sitting within %.2f rad of a limit"
+              % (rejected, LIMIT_MARGIN))
     results.sort(key=lambda r: (not r[3], r[0], r[1]))
     print("=" * 78)
     print("%-38s %7s %7s  %s" % ("joints (j1..j6)", "lat", "top", "valid"))

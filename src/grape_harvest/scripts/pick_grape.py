@@ -74,6 +74,7 @@ from gazebo_ros_link_attacher.srv import Attach, AttachRequest
 from sensor_msgs.msg import LaserScan
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from grape_detect import GrapeDetector
 from make_models import (POST_H, PANEL_W, PANELS_PER_ROW, N_ROWS, ROW_LEN,
                          LANE_STANDOFF, CRATE_BASE_XYZ, CRATE_INNER,
                          CRATE_SLOTS, row_x, lane_x, canopy_z, tunnel_bounds,
@@ -112,6 +113,14 @@ LASER_SETTLE = 0.4                 # let the arm stop ringing before firing
 # threshold is generous because ground truth twist is noisy on the clod track,
 # and because starting a cut while the base is still rolling is the one thing
 # that must not happen -- the beam would walk off the stem.
+# Visual servo. The deadband is set just under the beam spot so the arm does
+# not chase noise it cannot resolve; the ceiling rejects a detection that is too
+# far from the prior to be the cluster we came for -- a neighbouring bunch in
+# frame should be ignored, not chased.
+SERVO_DEADBAND = 0.008             # m; below this the aim is good enough
+SERVO_MAX = 0.25                   # m; beyond this, disbelieve the detection
+SERVO_TRIES = 2
+
 STOPPED_SPEED = 0.03               # m/s below which the base counts as parked
 SETTLE_AFTER_STOP = 1.0            # s of standing still before the arm moves
 
@@ -238,6 +247,7 @@ class GrapeHarvester(object):
         self.slots_used = 0
         self.in_scene = set()
         self.track_crate = TRACK_CRATE_CONTENTS
+        self.detector = None        # set by main() when --servo is given
 
         rospy.loginfo("planning frame: %s", self.planning_frame)
         rospy.loginfo("end effector  : %s", self.arm.get_end_effector_link())
@@ -281,6 +291,69 @@ class GrapeHarvester(object):
         dy = m[1, 3] - target.position.y
         dz = m[2, 3] - target.position.z
         return math.sqrt(dx * dx + dy * dy + dz * dz), (dx, dy, dz),             (m[0, 3], m[1, 3], m[2, 3])
+
+    def servo_correct(self, spec, grasp):
+        """Nudge the tool until the beam is on the stem the camera can see.
+
+        Returns the corrected pose, or the original if the camera has nothing
+        useful to say. Failing to see anything is not an error: the prior
+        coordinate is still a reasonable aim, and refusing to cut because the
+        detector blinked would be worse than cutting where we already believed
+        the stem was.
+        """
+        if self.detector is None:
+            return grasp
+
+        pose = grasp
+        for attempt in range(SERVO_TRIES):
+            rospy.sleep(0.4)                    # let the image catch up
+            got = self.detector.detect()
+            if got is None:
+                rospy.logwarn("  servo: nothing in view, keeping the prior aim")
+                return pose
+            (cx, cy, cz), npix, rng, truncated = got
+
+            # camera optical frame -> planning frame
+            try:
+                m = self._mat(self.planning_frame, self.detector.frame)
+            except Exception as e:
+                rospy.logwarn("  servo: no TF for %s (%s)",
+                              self.detector.frame, e)
+                return pose
+            v = m.dot([cx, cy, cz, 1.0])
+            seen = (v[0], v[1], v[2])
+
+            dx = seen[0] - pose.position.x
+            dy = seen[1] - pose.position.y
+            dz = seen[2] - pose.position.z
+            d = math.sqrt(dx * dx + dy * dy + dz * dz)
+
+            rospy.loginfo("  servo: %d px at %.3f m, stem seen at "
+                          "(%.3f, %.3f, %.3f), %.0f mm from the aim%s",
+                          npix, rng, seen[0], seen[1], seen[2], d * 1000,
+                          "  [height truncated, using lateral only]"
+                          if truncated else "")
+
+            if d > SERVO_MAX:
+                rospy.logwarn("  servo: %.0f mm off the prior, that is not the "
+                              "cluster we came for; ignoring", d * 1000)
+                return pose
+            if d < SERVO_DEADBAND:
+                rospy.loginfo("  servo: within %.0f mm, good enough",
+                              SERVO_DEADBAND * 1000)
+                return pose
+
+            corrected = copy.deepcopy(pose)
+            corrected.position.x = seen[0]
+            corrected.position.y = seen[1]
+            if not truncated:
+                corrected.position.z = seen[2]
+            if not self.go_cartesian(corrected, "%s servo %d"
+                                     % (spec["name"], attempt + 1)):
+                rospy.logwarn("  servo: could not move onto the corrected aim")
+                return pose
+            pose = corrected
+        return pose
 
     def fire(self, name, target=None):
         """Hold the beam on the peduncle long enough to sever it.
@@ -750,10 +823,12 @@ class GrapeHarvester(object):
         self.scene.remove_world_object(name)
         self.in_scene.discard(name)
         rospy.sleep(0.4)
+
         if not self.go_cartesian(grasp, "%s grasp" % name):
             return False
 
         rospy.loginfo("--- laser cut ---")
+        grasp = self.servo_correct(spec, grasp)
         if not self.fire(name, grasp):
             # nothing has been cut, so the cluster is still on the vine and
             # there is nothing to put down: a plain failure, not an abandon
@@ -1193,6 +1268,9 @@ def main():
                          "within reach whenever the platform is stopped")
     ap.add_argument("--row", type=int, default=0,
                     help="which trellis row to work (0..%d)" % (N_ROWS - 1))
+    ap.add_argument("--servo", action="store_true",
+                    help="correct the aim from the eye-in-hand camera before "
+                         "firing, instead of trusting the prior coordinate")
     ap.add_argument("--track-crate", action="store_true",
                     help="put fruit already in the crate into the planning "
                          "scene (see TRACK_CRATE_CONTENTS)")
@@ -1208,6 +1286,11 @@ def main():
     h = GrapeHarvester()
     if args.track_crate:
         h.track_crate = True
+    if args.servo:
+        h.detector = GrapeDetector()
+        rospy.loginfo("visual servo ON: the aim comes from the camera, "
+                      "not from the scene generator")
+        rospy.sleep(1.5)            # let the first frames arrive
 
     if args.check_only:
         h.build_planning_scene(specs)

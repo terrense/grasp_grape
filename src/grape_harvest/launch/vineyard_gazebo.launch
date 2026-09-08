@@ -48,8 +48,8 @@
   <node name="spawn_robot" pkg="gazebo_ros" type="spawn_model" output="screen"
         args="-urdf -param robot_description -model cr10_robot
               -x $(arg x) -y $(arg y) -z $(arg z) -Y $(arg yaw)
-              -J joint1 0 -J joint2 -0.9 -J joint3 2.4
-              -J joint4 -3.0708 -J joint5 -1.5708 -J joint6 0
+              -J joint1 0 -J joint2 -0.9 -J joint3 2.0
+              -J joint4 -2.6708 -J joint5 -1.5708 -J joint6 0
               -unpause"/>
 
   <rosparam command="load"

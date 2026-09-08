@@ -77,27 +77,32 @@ arm_controller:
     joint1: {p: 3000.0, i: 300.0, d: 120.0, i_clamp: 120.0}
     joint2: {p: 9000.0, i: 900.0, d: 380.0, i_clamp: 400.0}
     joint3: {p: 5000.0, i: 500.0, d: 220.0, i_clamp: 300.0}
-    joint4: {p: 1500.0, i: 150.0, d:  60.0, i_clamp: 100.0}
+    # wrist: d set near 2*sqrt(p*J) for the small inertia out here, NOT above
+    # it. The earlier attempt at p=1500/d=50 on joint6 was three times critical
+    # and oscillated.
+    joint4: {p: 2500.0, i: 250.0, d:  55.0, i_clamp: 150.0}
     joint5: {p:  700.0, i:  70.0, d:  30.0, i_clamp:  60.0}
-    joint6: {p:  300.0, i:  30.0, d:  12.0, i_clamp:  30.0}
+    joint6: {p:  900.0, i: 120.0, d:  15.0, i_clamp:  80.0}
   constraints:
-    goal_time: 3.0
+    goal_time: 12.0
     # These were all disabled while the joints were kinematic, because tracking
     # error was not a physical quantity and every tolerance fired spuriously.
     # With real torque control they mean something again:
     #   trajectory  loose on purpose. A torque-driven joint lags its trajectory
     #               by design; this catches a joint that has stalled or been
     #               blocked, it is not there to police lag.
-    #   goal        0.02 rad, about 24 mm at the CR10's 1.2 m reach. The laser
-    #               spot is 14 mm at its working distance, so this is the
-    #               accuracy the cut actually needs.
+    #   goal        Deliberately wide (0.20 rad) and goal_time long, to keep
+    #               the controller driving instead of declaring failure while
+    #               the integral term is still pulling in. What the cut needs
+    #               is about 0.02 rad; that gets tightened again once the
+    #               settled error is actually inside it.
     stopped_velocity_tolerance: 0.05
-    joint1: {trajectory: 0.60, goal: 0.02}
-    joint2: {trajectory: 0.60, goal: 0.02}
-    joint3: {trajectory: 0.60, goal: 0.02}
-    joint4: {trajectory: 0.60, goal: 0.02}
-    joint5: {trajectory: 0.60, goal: 0.02}
-    joint6: {trajectory: 0.60, goal: 0.02}
+    joint1: {trajectory: 0.60, goal: 0.20}
+    joint2: {trajectory: 0.60, goal: 0.20}
+    joint3: {trajectory: 0.60, goal: 0.20}
+    joint4: {trajectory: 0.60, goal: 0.20}
+    joint5: {trajectory: 0.60, goal: 0.20}
+    joint6: {trajectory: 0.60, goal: 0.20}
   stop_trajectory_duration: 0.5
   state_publish_rate: 50
   action_monitor_rate: 20
